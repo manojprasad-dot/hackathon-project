@@ -75,13 +75,12 @@ Traditional browser security tools rely on cloud lookups. This architecture intr
 
 ---
 
-## 🕹️ Demo Scenarios
+## 🕹️ Live Testing Scenarios
 
-PhishGuard Edge AI includes a visual **Demo Sandbox** built directly into the header of the popup panel. Click these buttons to test the engine's behavior:
-1.  **Safe Domain**: Simulates navigating to a trusted host (e.g., Google). Renders green indicators showing HTTPS alignment and domain age.
-2.  **Medium Risk**: Evaluates a subdomain with keyword anomalies. Renders warning alerts with moderate threat weights.
-3.  **High Risk**: Simulates a credential harvester (IP host). Redirection logic intercepts the page and routes to the warning page.
-4.  **Offline Scan**: Simulates total network disconnection. Renders purely local rule evaluations.
+PhishGuard Edge AI scans your active browser tabs dynamically. To test the prediction flow:
+1. **Safe Host**: Navigate to standard secure platforms (e.g. `https://www.google.com` or `https://github.com`). The dashboard will render a green gauge (**LOW RISK**) and checkmark indicators.
+2. **Local Address / Raw Host**: Navigate to a local router IP or raw endpoint (e.g. `http://192.168.1.1/login`). The model will flag the lack of standard DNS and secure TLS, showing risk elevations.
+3. **Suspicious Subdomains**: Try visiting links with nested brand spoofs to observe how the heuristic entropy checks score the hostnames.
 
 ---
 
