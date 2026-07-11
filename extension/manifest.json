@@ -70,7 +70,9 @@
         "ai/ort.min.js",
         "ai/preprocessing.js",
         "ai/email_preprocessor.js",
-        "ai/predictor.js"
+        "ai/predictor.js",
+        "ai/ort-wasm.wasm",
+        "ai/ort-wasm-simd.wasm"
       ],
       "matches": ["<all_urls>"]
     }

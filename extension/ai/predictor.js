@@ -20,6 +20,16 @@
  *   // result: { is_phishing, confidence, risk_level, reasons }
  */
 
+// -- ONNX Runtime WASM Config (for Chrome Extension Service Worker environment)
+// Points the runtime to the local extension folder and restricts thread pools to avoid dynamic imports.
+const aiFolder = chrome.runtime.getURL("ai/");
+ort.env.wasm.numThreads = 1;
+ort.env.wasm.simd       = true;
+ort.env.wasm.wasmPaths = {
+  "ort-wasm.wasm": aiFolder + "ort-wasm.wasm",
+  "ort-wasm-simd.wasm": aiFolder + "ort-wasm-simd.wasm"
+};
+
 // -- Heuristic engine weights (ported from backend/ml/detector.py) ----------
 const FEATURE_WEIGHTS = {
   is_ip_address:           0.70,
