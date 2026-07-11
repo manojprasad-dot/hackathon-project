@@ -3,7 +3,7 @@
 // Explainable AI (XAI) feature cards, and the interactive demo switcher.
 
 import { icon } from "./icons.js";
-import { verdictForScore, VERDICTS, DEMO_SCENARIOS, RECENT_SCANS_SEED } from "./constants.js";
+import { verdictForScore, VERDICTS } from "./constants.js";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -12,7 +12,7 @@ const CIRC = 2 * Math.PI * 42; // r=42 circumference ~263.89
 
 let history = [];
 let currentScenario = "safe";
-let activeTabInfo = { url: "No page active", score: 0, confidence: 99.8, scanMs: 2.6, reasons: [] };
+let activeTabInfo = { domain: "No page active", score: 0, confidence: 99.8, scanMs: 2.6, reasons: [] };
 
 // ── Default Safe Indicators for XAI ──────────────────────────────────────
 
@@ -187,53 +187,7 @@ function renderHistory() {
   listFull.innerHTML = rows;
 }
 
-// ── Scenario Switcher (Demo Sandbox) ──────────────────────────────────────
 
-function loadScenario(key, animate = true) {
-  currentScenario = key;
-  const s = DEMO_SCENARIOS[key];
-  const verdict = verdictForScore(s.score);
-  const meta = VERDICTS[verdict];
-
-  $("#riskDomain").textContent = s.domain;
-  $("#riskScanTime").textContent = "just now";
-
-  const pill = $("#verdictPill");
-  pill.className = `verdict-pill ${verdict}`;
-  pill.innerHTML = `${icon(verdict === "safe" ? "shield-check" : verdict === "warning" ? "type" : "server", 13)} ${meta.label}`;
-
-  $("#confidenceVal").textContent = `${s.confidence.toFixed(1)}%`;
-  $("#scanTimeVal").textContent = `${s.scanMs.toFixed(1)} ms`;
-
-  document.body.dataset.verdict = verdict;
-  $("#warningBanner").style.display = verdict === "danger" ? "flex" : "none";
-
-  const finish = () => {
-    renderReasons(s.reasons, s.score);
-    
-    // Check if duplicate domain exists in history list
-    history = history.filter(h => h.domain !== s.domain);
-    history.unshift({
-      domain: s.domain,
-      score: s.score,
-      confidence: s.confidence,
-      time: "just now",
-      timestamp: new Date().toISOString()
-    });
-    
-    // Cap history
-    history = history.slice(0, 10);
-    renderHistory();
-  };
-
-  if (animate) runScanAnimation(s.score, finish);
-  else {
-    paintGauge(s.score);
-    finish();
-  }
-
-  $$(".demo-btn").forEach((b) => b.classList.toggle("active", b.dataset.scenario === key));
-}
 
 // ── Active Tab Interface Syncing ───────────────────────────────────────────
 
@@ -342,11 +296,7 @@ function initTabs() {
   });
 }
 
-function initDemoSwitcher() {
-  $$(".demo-btn").forEach((btn) => {
-    btn.addEventListener("click", () => loadScenario(btn.dataset.scenario));
-  });
-}
+
 
 function initSettings() {
   const settingsKeys = ["set-email", "set-notif", "set-vt", "set-gsb", "set-telemetry"];
@@ -373,7 +323,7 @@ function initSettings() {
     chrome.runtime.sendMessage({ type: "CLEAR_HISTORY" }, () => {
       history = [];
       renderHistory();
-      loadScenario("safe", false);
+      loadActiveTab();
     });
   });
 
@@ -391,7 +341,6 @@ function initSettings() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initTabs();
-  initDemoSwitcher();
   initSettings();
 
   // Setup email scan button
@@ -410,7 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
         timestamp: a.timestamp
       }));
     } else {
-      history = [...RECENT_SCANS_SEED];
+      history = [];
     }
     renderHistory();
     loadActiveTab();
@@ -425,8 +374,6 @@ document.addEventListener("DOMContentLoaded", () => {
           setTimeout(loadActiveTab, 200);
         });
       });
-    } else {
-      loadScenario(currentScenario);
     }
   });
 });
