@@ -1,119 +1,260 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PhishGuard</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>PhishGuard — On-Device AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
-      --bg:#0c0c0e;--s1:#141416;--s2:#1a1a1d;
-      --b:rgba(255,255,255,0.07);
-      --t:#f0f0f0;--m:#666;
-      --red:#FF3B30;--grn:#34C759;--blu:#0A84FF;--ylw:#FF9F0A;
+      --bg:#090a0f;--s1:#0f1016;--s2:#14151c;--s3:#1a1b24;
+      --b:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.1);
+      --t:#f0f0f4;--m:#5c5c70;--m2:#888;
+      --red:#FF3B30;--red2:#FF6B5E;--rg:rgba(255,59,48,0.12);
+      --grn:#34C759;--grn2:#5dde7e;--gg:rgba(52,199,89,0.1);
+      --blu:#0A84FF;--blg:rgba(10,132,255,0.1);
+      --ylw:#FF9F0A;--pur:#BF5AF2;
+      --safe-glow: 0 0 24px rgba(52,199,89,0.18);
+      --phish-glow: 0 0 24px rgba(255,59,48,0.22);
     }
-    body{width:340px;background:var(--bg);color:var(--t);font-family:'Outfit',sans-serif;font-size:14px}
+    body{width:360px;background:var(--bg);color:var(--t);font-family:'Outfit',sans-serif;font-size:14px;overflow-x:hidden}
 
-    /* ── Header ─────────────────────────────── */
-    .hdr{padding:15px 18px;background:var(--s1);border-bottom:1px solid var(--b);
-      display:flex;align-items:center;justify-content:space-between}
+    /* ══ HEADER ══════════════════════════════════════════════ */
+    .hdr{
+      padding:14px 18px;
+      background:linear-gradient(135deg, #0f1016 0%, #13141d 100%);
+      border-bottom:1px solid var(--b);
+      display:flex;align-items:center;justify-content:space-between;
+      position:relative;overflow:hidden;
+    }
+    .hdr::before{
+      content:'';position:absolute;top:-40px;right:-20px;
+      width:120px;height:120px;
+      background:radial-gradient(circle, rgba(255,59,48,0.08), transparent 70%);
+      pointer-events:none;
+    }
     .logo{display:flex;align-items:center;gap:10px}
-    .logo-txt{font-weight:700;font-size:16px;letter-spacing:-.4px}
-    .logo-txt b{color:var(--red)}
-    .pill{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
-      color:var(--grn);background:rgba(52,199,89,.1);border:1px solid rgba(52,199,89,.2);
-      padding:3px 10px;border-radius:20px}
-    .dot{width:6px;height:6px;background:var(--grn);border-radius:50%;animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .logo-shield{position:relative;flex-shrink:0}
+    .logo-txt{font-weight:800;font-size:17px;letter-spacing:-.5px;line-height:1}
+    .logo-txt span{color:var(--red)}
+    .logo-sub{font-size:9px;color:var(--m2);font-weight:500;letter-spacing:.05em;margin-top:1px}
+    .pill{
+      display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;
+      color:var(--grn);background:rgba(52,199,89,.08);
+      border:1px solid rgba(52,199,89,.2);padding:4px 10px;border-radius:20px;
+      letter-spacing:.04em;
+    }
+    .dot{width:5px;height:5px;background:var(--grn);border-radius:50%;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 
-    /* ── Current tab ─────────────────────────── */
-    .cur{padding:13px 18px;background:var(--s2);border-bottom:1px solid var(--b)}
-    .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--m);
-      font-weight:600;margin-bottom:5px}
-    .url-txt{font-family:'JetBrains Mono',monospace;font-size:11px;color:#999;
-      word-break:break-all;line-height:1.45}
-    .url-st{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12.5px;font-weight:600}
-    .url-st.safe{color:var(--grn)} .url-st.danger{color:var(--red)}
-    .url-st.scan{color:var(--blu)}
+    /* ══ RISK CARD (main feature) ══════════════════════════════ */
+    .risk-card{
+      padding:20px 18px;
+      border-bottom:1px solid var(--b);
+      position:relative;overflow:hidden;
+      transition:background 0.4s ease;
+    }
+    .risk-card.safe{background:linear-gradient(160deg,#090a0f 0%,#0b120e 100%)}
+    .risk-card.phishing{background:linear-gradient(160deg,#0f0a09 0%,#120b0b 100%)}
+    .risk-card.scanning{background:var(--bg)}
+    .risk-card.neutral{background:var(--bg)}
 
-    /* ── Stats row ───────────────────────────── */
+    .risk-card::after{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse at 80% 50%,var(--glow-color,transparent) 0%,transparent 65%);
+      transition:opacity 0.5s ease;
+    }
+    .risk-card.safe{--glow-color:rgba(52,199,89,0.07)}
+    .risk-card.phishing{--glow-color:rgba(255,59,48,0.1)}
+
+    .risk-inner{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+
+    /* SVG arc meter */
+    .arc-wrap{position:relative;flex-shrink:0}
+    .arc-svg{transform:rotate(-90deg);filter:drop-shadow(0 0 8px var(--arc-glow, transparent))}
+    .arc-bg{fill:none;stroke:var(--s3);stroke-width:5}
+    .arc-fill{
+      fill:none;stroke-width:5;stroke-linecap:round;
+      stroke-dasharray:163;stroke-dashoffset:163;
+      transition:stroke-dashoffset 0.9s cubic-bezier(.4,0,.2,1), stroke 0.4s ease;
+    }
+    .arc-center{
+      position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;line-height:1;
+    }
+    .arc-pct{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600}
+    .arc-lbl{font-size:9px;color:var(--m2);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+
+    /* Risk text side */
+    .risk-text{flex:1;min-width:0}
+    .risk-url{
+      font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#66687a;
+      word-break:break-all;line-height:1.5;max-height:2.6em;overflow:hidden;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+      margin-bottom:8px;
+    }
+    .risk-verdict{
+      font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;
+      letter-spacing:-.2px;margin-bottom:4px;
+    }
+    .risk-verdict-ico{font-size:16px}
+    .risk-badge{
+      display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
+      padding:3px 10px;border-radius:12px;letter-spacing:.04em;text-transform:uppercase;
+    }
+    .risk-badge.safe{background:var(--gg);color:var(--grn);border:1px solid rgba(52,199,89,.2)}
+    .risk-badge.high{background:var(--rg);color:var(--red);border:1px solid rgba(255,59,48,.2)}
+    .risk-badge.medium{background:rgba(255,159,10,.1);color:var(--ylw);border:1px solid rgba(255,159,10,.2)}
+    .risk-badge.low{background:rgba(10,132,255,.1);color:var(--blu);border:1px solid rgba(10,132,255,.2)}
+    .risk-badge.scanning{background:rgba(10,132,255,.08);color:var(--blu);border:1px solid rgba(10,132,255,.15)}
+
+    /* ══ EXPLANATION PANEL ══════════════════════════════════ */
+    .explain-wrap{
+      border-bottom:1px solid var(--b);
+      overflow:hidden;max-height:0;
+      transition:max-height 0.35s cubic-bezier(.4,0,.2,1);
+    }
+    .explain-wrap.open{max-height:300px}
+    .explain-inner{padding:0 18px 14px 18px}
+    .explain-header{
+      padding:10px 18px 0 18px;font-size:10px;font-weight:700;
+      letter-spacing:.08em;text-transform:uppercase;color:var(--m2);
+      display:flex;align-items:center;gap:6px;cursor:pointer;
+      user-select:none;border-bottom:1px solid var(--b);margin:0 -18px;padding-bottom:10px;
+    }
+    .explain-toggle{
+      margin-left:auto;font-size:10px;color:var(--m);
+      background:rgba(255,255,255,.05);border-radius:4px;padding:1px 7px;border:1px solid var(--b);
+      cursor:pointer;transition:all .2s;
+    }
+    .explain-toggle:hover{color:var(--t);background:rgba(255,255,255,.09)}
+    .reason-item{
+      display:flex;align-items:flex-start;gap:9px;
+      padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);
+      animation:reasonIn .3s ease;
+    }
+    @keyframes reasonIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+    .reason-item:last-child{border-bottom:none}
+    .reason-dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px}
+    .reason-dot.safe{background:var(--grn)}
+    .reason-txt{font-size:12px;color:#c0c0cc;line-height:1.5}
+    .no-reasons{font-size:12px;color:var(--m);padding:12px 0;text-align:center}
+
+    /* ══ STATS ROW ══════════════════════════════════════════ */
     .stats{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--b)}
-    .sc{padding:14px 0;text-align:center;border-right:1px solid var(--b)}
+    .sc{padding:12px 0;text-align:center;border-right:1px solid var(--b)}
     .sc:last-child{border-right:none}
-    .sv{font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:2px}
+    .sv{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:2px;
+      transition:all .4s ease}
     .sv.t{color:var(--blu)}.sv.p{color:var(--red)}.sv.s{color:var(--grn)}
-    .sk{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.06em}
+    .sk{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
 
-    /* ── Tabs ────────────────────────────────── */
-    .tabs{display:flex;border-bottom:1px solid var(--b)}
-    .tab{flex:1;padding:9px;text-align:center;font-size:12px;font-weight:600;
-      color:var(--m);cursor:pointer;transition:.2s;border-bottom:2px solid transparent}
+    /* ══ TABS ═════════════════════════════════════════════ */
+    .tabs{display:flex;border-bottom:1px solid var(--b);background:var(--s1)}
+    .tab{
+      flex:1;padding:9px;text-align:center;font-size:11.5px;font-weight:600;
+      color:var(--m);cursor:pointer;transition:.2s;border-bottom:2px solid transparent;
+      letter-spacing:.02em;
+    }
+    .tab:hover{color:var(--m2)}
     .tab.active{color:var(--t);border-bottom-color:var(--red)}
 
-    /* ── Alert list ──────────────────────────── */
-    .panel{display:none} .panel.active{display:block}
-    .al-wrap{max-height:190px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#333 transparent}
-    .al{padding:9px 18px;border-bottom:1px solid var(--b);display:flex;
-      align-items:center;gap:10px;transition:background .15s;cursor:default}
+    /* ══ ALERT LIST ════════════════════════════════════════ */
+    .panel{display:none}.panel.active{display:block}
+    .al-wrap{max-height:170px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#222 transparent}
+    .al{
+      padding:8px 18px;border-bottom:1px solid rgba(255,255,255,.04);
+      display:flex;align-items:center;gap:10px;
+      transition:background .15s;cursor:default;
+    }
     .al:hover{background:var(--s1)}
-    .aldot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-    .aldot.p{background:var(--red)} .aldot.s{background:var(--grn)}
+    .aldot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .aldot.p{background:var(--red)}.aldot.s{background:var(--grn)}
     .al-info{flex:1;overflow:hidden}
-    .al-host{font-size:12px;font-weight:500;color:#ddd;
+    .al-host{font-size:11.5px;font-weight:500;color:#d0d0dc;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .al-time{font-size:10px;color:var(--m);margin-top:1px}
-    .albadge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px}
-    .albadge.p{background:rgba(255,59,48,.12);color:var(--red);border:1px solid rgba(255,59,48,.2)}
-    .albadge.s{background:rgba(52,199,89,.1);color:var(--grn);border:1px solid rgba(52,199,89,.15)}
-    .empty{padding:28px 18px;text-align:center;color:var(--m);font-size:12px}
-    .empty-ico{font-size:26px;margin-bottom:8px;opacity:.35}
+    .al-time{font-size:10px;color:var(--m);margin-top:1px;display:flex;align-items:center;gap:6px}
+    .al-conf{font-size:9px;color:#555;background:rgba(255,255,255,.04);
+      padding:1px 5px;border-radius:3px}
+    .albadge{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:10px}
+    .albadge.p{background:rgba(255,59,48,.1);color:var(--red);border:1px solid rgba(255,59,48,.15)}
+    .albadge.s{background:rgba(52,199,89,.08);color:var(--grn);border:1px solid rgba(52,199,89,.12)}
+    .empty{padding:24px 18px;text-align:center;color:var(--m);font-size:12px;line-height:1.8}
+    .empty-ico{font-size:24px;margin-bottom:6px;opacity:.3}
 
-    /* ── Feedback log ────────────────────────── */
-    .fb{padding:9px 18px;border-bottom:1px solid var(--b);font-size:12px;
+    /* ══ FEEDBACK LOG ═════════════════════════════════════ */
+    .fb{padding:8px 18px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;
       display:flex;align-items:center;gap:8px;color:#bbb}
-    .fb-verdict{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase}
-    .fb-verdict.safe{background:rgba(52,199,89,.12);color:var(--grn)}
-    .fb-verdict.phishing{background:rgba(255,59,48,.12);color:var(--red)}
-    .fb-verdict.user_proceeded{background:rgba(255,159,10,.12);color:var(--ylw)}
+    .fb-verdict{font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;
+      white-space:nowrap}
+    .fb-verdict.safe{background:rgba(52,199,89,.1);color:var(--grn)}
+    .fb-verdict.phishing{background:var(--rg);color:var(--red)}
+    .fb-verdict.user_proceeded{background:rgba(255,159,10,.1);color:var(--ylw)}
 
-    /* ── Actions bar ─────────────────────────── */
-    .actbar{padding:10px 18px;border-top:1px solid var(--b);
-      display:flex;justify-content:space-between;align-items:center}
+    /* ══ ACTION BUTTONS ═══════════════════════════════════ */
+    .action-btns{padding:8px 18px;border-top:1px solid var(--b);display:flex;gap:7px}
+    .btn-action{
+      flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:600;
+      font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;
+      display:flex;align-items:center;justify-content:center;gap:5px;border:none;
+    }
+    .btn-report{background:rgba(255,59,48,.08);color:var(--red2);border:1px solid rgba(255,59,48,.18)}
+    .btn-report:hover{background:rgba(255,59,48,.16);transform:translateY(-1px)}
+    .btn-scan{background:rgba(10,132,255,.08);color:var(--blu);border:1px solid rgba(10,132,255,.18)}
+    .btn-scan:hover{background:rgba(10,132,255,.16);transform:translateY(-1px)}
+    .btn-email{background:rgba(191,90,242,.08);color:var(--pur);border:1px solid rgba(191,90,242,.18);width:100%}
+    .btn-email:hover{background:rgba(191,90,242,.16);transform:translateY(-1px)}
+    .shortcut{font-size:9px;color:#444;background:rgba(255,255,255,.04);
+      padding:1px 5px;border-radius:3px;border:1px solid rgba(255,255,255,.07)}
+
+    /* ══ FOOTER ══════════════════════════════════════════ */
+    .actbar{
+      padding:9px 18px;border-top:1px solid var(--b);
+      display:flex;justify-content:space-between;align-items:center;
+      background:var(--s1);
+    }
     .btn-sm{font-size:11px;color:var(--m);background:none;border:none;
       cursor:pointer;font-family:'Outfit',sans-serif;transition:color .2s;padding:0}
     .btn-sm:hover{color:var(--red)}
-    .ver{font-size:10px;color:#333}
+    .ai-badge{
+      display:flex;align-items:center;gap:5px;font-size:9.5px;
+      color:#444;font-weight:600;letter-spacing:.03em;
+    }
+    .ai-badge-chip{
+      background:linear-gradient(135deg,rgba(10,132,255,.15),rgba(191,90,242,.1));
+      border:1px solid rgba(10,132,255,.2);border-radius:6px;
+      padding:2px 7px;font-size:9px;color:#5a9fff;font-weight:700;letter-spacing:.05em;
+    }
 
-    /* ── Report & Quick Scan buttons ─────────── */
-    .action-btns{padding:8px 18px;border-top:1px solid var(--b);display:flex;gap:8px}
-    .btn-action{flex:1;padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;
-      font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;
-      display:flex;align-items:center;justify-content:center;gap:5px;border:none}
-    .btn-report{background:rgba(255,59,48,.1);color:var(--red);border:1px solid rgba(255,59,48,.2)}
-    .btn-report:hover{background:rgba(255,59,48,.2)}
-    .btn-scan{background:rgba(10,132,255,.1);color:var(--blu);border:1px solid rgba(10,132,255,.2)}
-    .btn-scan:hover{background:rgba(10,132,255,.2)}
-    .shortcut{font-size:9px;color:#555;background:rgba(255,255,255,.05);padding:1px 5px;
-      border-radius:3px;border:1px solid rgba(255,255,255,.08)}
-
-    /* ── Report Modal ────────────────────────── */
-    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;
-      display:flex;align-items:center;justify-content:center}
-    .modal{background:var(--s1);border:1px solid var(--b);border-radius:12px;
-      width:300px;padding:20px;animation:fadeIn .2s ease}
+    /* ══ REPORT MODAL ═════════════════════════════════════ */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;
+      display:flex;align-items:center;justify-content:center;
+      backdrop-filter:blur(4px);}
+    .modal{
+      background:var(--s1);border:1px solid var(--b2);border-radius:14px;
+      width:310px;padding:22px;animation:fadeIn .2s ease;
+    }
     @keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-    .modal h3{font-size:14px;margin-bottom:12px;color:var(--t)}
-    .modal select,.modal textarea{width:100%;background:var(--s2);color:var(--t);
-      border:1px solid var(--b);border-radius:6px;padding:8px;font-size:12px;
-      font-family:'Outfit',sans-serif;margin-bottom:10px;resize:vertical}
+    .modal h3{font-size:14px;margin-bottom:14px;color:var(--t);font-weight:700}
+    .modal select,.modal textarea{
+      width:100%;background:var(--s2);color:var(--t);
+      border:1px solid var(--b2);border-radius:8px;padding:9px;font-size:12px;
+      font-family:'Outfit',sans-serif;margin-bottom:10px;resize:vertical;
+      outline:none;transition:border-color .2s;
+    }
+    .modal select:focus,.modal textarea:focus{border-color:rgba(10,132,255,.4)}
     .modal textarea{height:60px}
     .modal-btns{display:flex;gap:8px;justify-content:flex-end}
-    .modal-btns button{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;
+    .modal-btns button{padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;
       cursor:pointer;font-family:'Outfit',sans-serif;border:none;transition:all .2s}
     .modal-submit{background:var(--red);color:#fff}
-    .modal-submit:hover{background:#e02020}
-    .modal-cancel{background:var(--s2);color:var(--m);border:1px solid var(--b)!important}
+    .modal-submit:hover{background:#e02020;transform:translateY(-1px)}
+    .modal-cancel{background:var(--s2);color:var(--m2);border:1px solid var(--b)!important}
     .modal-cancel:hover{color:var(--t)}
+
+    /* ══ SCANNING PULSE ═══════════════════════════════════ */
+    @keyframes arcPulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .arc-scanning .arc-fill{animation:arcPulse 1.2s ease infinite}
   </style>
 </head>
 <body>
@@ -121,22 +262,62 @@
   <!-- Header -->
   <div class="hdr">
     <div class="logo">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <path d="M14 3L4 8v7c0 5.83 4.27 11.28 10 12.6C19.73 26.28 24 20.83 24 15V8L14 3z"
-              fill="rgba(255,59,48,.15)" stroke="#FF3B30" stroke-width="1.5"/>
-        <path d="M10 14l3 3 5-5" stroke="#FF3B30" stroke-width="2"
+      <svg class="logo-shield" width="30" height="30" viewBox="0 0 28 28" fill="none">
+        <path d="M14 2L3 7.5v7.2C3 21 8.1 26.5 14 27.8c5.9-1.3 11-6.8 11-13.1V7.5L14 2z"
+              fill="rgba(255,59,48,0.1)" stroke="#FF3B30" stroke-width="1.4"/>
+        <path d="M9.5 14l3.5 3.5 6-7" stroke="#FF3B30" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <div class="logo-txt">Phish<b>Guard</b></div>
+      <div>
+        <div class="logo-txt">Phish<span>Guard</span></div>
+        <div class="logo-sub">ON-DEVICE AI · v4.0</div>
+      </div>
     </div>
     <div class="pill"><div class="dot"></div>Active</div>
   </div>
 
-  <!-- Current Tab -->
-  <div class="cur">
-    <div class="lbl">Current Page</div>
-    <div class="url-txt" id="cur-url">Loading…</div>
-    <div class="url-st scan" id="cur-st"><span id="st-ico">⟳</span><span id="st-txt">Scanning…</span></div>
+  <!-- Risk Card: Confidence Arc + Verdict -->
+  <div class="risk-card neutral" id="risk-card">
+    <div class="risk-inner">
+
+      <!-- Arc meter -->
+      <div class="arc-wrap" id="arc-wrap">
+        <svg class="arc-svg" width="80" height="80" viewBox="0 0 80 80">
+          <circle class="arc-bg" cx="40" cy="40" r="26"/>
+          <circle class="arc-fill" id="arc-fill" cx="40" cy="40" r="26"
+                  stroke="#34C759" stroke-dashoffset="163"/>
+        </svg>
+        <div class="arc-center">
+          <div class="arc-pct" id="arc-pct">–</div>
+          <div class="arc-lbl">risk</div>
+        </div>
+      </div>
+
+      <!-- Text -->
+      <div class="risk-text">
+        <div class="risk-url" id="cur-url">Loading…</div>
+        <div class="risk-verdict" id="risk-verdict">
+          <span class="risk-verdict-ico" id="verdict-ico">⟳</span>
+          <span id="verdict-txt">Scanning page…</span>
+        </div>
+        <div class="risk-badge scanning" id="risk-badge">Analyzing</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Explanation Panel (collapsible) -->
+  <div id="explain-section" style="display:none">
+    <div class="explain-header" id="explain-toggle">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0">
+        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+      </svg>
+      Why was this flagged?
+      <button class="explain-toggle" id="toggle-btn">Show ▾</button>
+    </div>
+    <div class="explain-wrap" id="explain-wrap">
+      <div class="explain-inner" id="reason-list"></div>
+    </div>
   </div>
 
   <!-- Stats -->
@@ -149,7 +330,7 @@
   <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" data-panel="alerts">Recent Alerts</div>
-    <div class="tab" data-panel="feedback">User Feedback</div>
+    <div class="tab" data-panel="feedback">Feedback</div>
   </div>
 
   <!-- Alert List -->
@@ -169,40 +350,43 @@
   <!-- Action Buttons -->
   <div class="action-btns">
     <button class="btn-action btn-report" id="btn-report">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
         <line x1="4" y1="22" x2="4" y2="15"/>
       </svg>
-      Report Website
+      Report Site
     </button>
     <button class="btn-action btn-scan" id="btn-quickscan">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      Quick Scan <span class="shortcut">Ctrl+Shift+P</span>
+      Quick Scan <span class="shortcut">⌃⇧P</span>
     </button>
   </div>
   <div class="action-btns" style="padding-top:0">
-    <button class="btn-action btn-email" id="btn-email-scanner" style="background:rgba(191,90,242,.1);color:#BF5AF2;border:1px solid rgba(191,90,242,.2);width:100%">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <button class="btn-action btn-email" id="btn-email-scanner">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/>
       </svg>
       ✉ Email Phishing Scanner
     </button>
   </div>
 
-  <!-- Actions -->
+  <!-- Footer -->
   <div class="actbar">
     <button class="btn-sm" id="btn-clear">Clear History</button>
-    <div class="ver">PhishGuard v3.0</div>
+    <div class="ai-badge">
+      <div class="ai-badge-chip">⚡ ONNX</div>
+      <span style="color:#333">30 features · &lt;5ms</span>
+    </div>
   </div>
 
-  <!-- Report Modal (hidden) -->
+  <!-- Report Modal -->
   <div class="modal-bg" id="report-modal" style="display:none">
     <div class="modal">
       <h3>🚩 Report Suspicious Website</h3>
-      <div class="lbl" style="margin-bottom:6px">Website</div>
-      <div class="url-txt" id="report-url" style="margin-bottom:10px">—</div>
+      <div style="font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Website</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#666;word-break:break-all;margin-bottom:12px" id="report-url">—</div>
       <select id="report-reason">
         <option value="phishing">Phishing / Scam</option>
         <option value="malware">Malware / Virus</option>
@@ -210,7 +394,7 @@
         <option value="spam">Spam / Misleading</option>
         <option value="other">Other</option>
       </select>
-      <textarea id="report-notes" placeholder="Additional details (optional)..."></textarea>
+      <textarea id="report-notes" placeholder="Additional details (optional)…"></textarea>
       <div class="modal-btns">
         <button class="modal-cancel" id="report-cancel">Cancel</button>
         <button class="modal-submit" id="report-submit">Submit Report</button>

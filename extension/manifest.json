@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "PhishGuard 3.0 — AI Phishing Detector",
-  "version": "3.0.0",
-  "description": "AI-powered real-time phishing detection with 38 URL features, 28 email features, combo-boosted heuristics, and enterprise-grade ML ensemble for maximum accuracy.",
+  "name": "PhishGuard 4.0 — On-Device AI Phishing Detector",
+  "version": "4.0.0",
+  "description": "AI-powered phishing detection running 100% on-device via ONNX Runtime Web. No server required. Works offline. 30 URL features + 28 email features. Zero data ever leaves your browser.",
+
   "permissions": [
     "tabs",
     "activeTab",
@@ -12,9 +13,12 @@
     "scripting"
   ],
   "host_permissions": ["<all_urls>"],
+
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
+
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -32,33 +36,54 @@
       "run_at": "document_idle"
     }
   ],
+
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "PhishGuard"
+    "default_title": "PhishGuard — On-Device AI"
   },
+
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
     "128": "icons/icon128.png"
   },
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+
   "web_accessible_resources": [
     {
-      "resources": ["email_scanner.html", "email_scanner.js", "report.html", "weekly_report.html", "warning.html"],
+      "resources": [
+        "email_scanner.html",
+        "email_scanner.js",
+        "report.html",
+        "weekly_report.html",
+        "warning.html",
+        "warning.js",
+        "ai/model.onnx",
+        "ai/email_model.onnx",
+        "ai/ort.min.js",
+        "ai/preprocessing.js",
+        "ai/email_preprocessor.js",
+        "ai/predictor.js"
+      ],
       "matches": ["<all_urls>"]
     }
   ],
+
   "commands": {
     "quick-scan": {
       "suggested_key": {
         "default": "Ctrl+Shift+P",
-        "mac": "Command+Shift+P"
+        "mac":     "Command+Shift+P"
       },
-      "description": "Quick scan current page"
+      "description": "Quick scan current page (on-device ONNX inference)"
     }
   }
 }
