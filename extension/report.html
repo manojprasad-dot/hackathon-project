@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishGuard — Report Phishing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #0a0a0f;
+      color: #f0f0f0;
+      font-family: 'Outfit', 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(102,126,234,0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(118,75,162,0.06) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 600px;
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+      animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .shield-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15));
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(102,126,234,0.2);
+    }
+
+    .header-text h1 {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.3px;
+    }
+
+    .header-text p {
+      font-size: 13px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #f0f0f0;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: rgba(102,126,234,0.4);
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+
+    .form-input.readonly {
+      color: #999;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: rgba(255,255,255,0.02);
+      cursor: not-allowed;
+    }
+
+    .form-select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+    }
+
+    .form-select option {
+      background: #1a1a2e;
+      color: #f0f0f0;
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(102,126,234,0.3);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.5s, height 0.5s;
+    }
+
+    .submit-btn:hover::after {
+      width: 300px;
+      height: 300px;
+    }
+
+    .submit-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .feedback {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      animation: feedbackIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes feedbackIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feedback.success {
+      display: flex;
+      background: rgba(0,230,118,0.08);
+      border: 1px solid rgba(0,230,118,0.2);
+      color: #00e676;
+    }
+
+    .feedback.error {
+      display: flex;
+      background: rgba(255,82,82,0.08);
+      border: 1px solid rgba(255,82,82,0.2);
+      color: #ff5252;
+    }
+
+    .feedback-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13px;
+      color: #666;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: #667eea;
+    }
+
+    .optional-tag {
+      font-size: 10px;
+      color: #555;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      margin-left: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="shield-icon">
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+          <path d="M14 3L4 8v7c0 5.83 4.27 11.28 10 12.6C19.73 26.28 24 20.83 24 15V8L14 3z"
+                fill="rgba(102,126,234,0.2)" stroke="#667eea" stroke-width="1.5"/>
+          <path d="M10 14l3 3 5-5" stroke="#667eea" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>Report Phishing</h1>
+        <p>Help us protect others by reporting suspicious sites</p>
+      </div>
+    </div>
+
+    <form id="report-form">
+      <div class="form-group">
+        <label class="form-label">Suspicious URL</label>
+        <input type="text" class="form-input readonly" id="report-url" readonly>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Report Type</label>
+        <select class="form-select" id="report-type">
+          <option value="phishing_site">🎣 Phishing Site</option>
+          <option value="malware">🦠 Malware</option>
+          <option value="fake_login">🔐 Fake Login Page</option>
+          <option value="spam">📢 Spam</option>
+          <option value="other">📋 Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="report-description" placeholder="Describe what made this site look suspicious..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Email <span class="optional-tag">(optional — for follow-up)</span></label>
+        <input type="email" class="form-input" id="report-email" placeholder="your@email.com">
+      </div>
+
+      <button type="submit" class="submit-btn" id="submit-btn">
+        🚩 Submit Report
+      </button>
+
+      <div class="feedback" id="feedback"></div>
+    </form>
+
+    <a href="#" class="back-link" id="back-link">← Back to browsing</a>
+  </div>
+
+  <script>
+    const API_BASE = "https://phishguard-api-6dmc.onrender.com";
+
+    // Read URL from query params
+    const params = new URLSearchParams(window.location.search);
+    const reportUrl = params.get('url') || '';
+    document.getElementById('report-url').value = reportUrl || 'No URL provided';
+
+    // Back link
+    document.getElementById('back-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.close();
+      }
+    });
+
+    // Form submit
+    document.getElementById('report-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('submit-btn');
+      const feedback = document.getElementById('feedback');
+
+      const reportType = document.getElementById('report-type').value;
+      const description = document.getElementById('report-description').value;
+      const email = document.getElementById('report-email').value;
+
+      // Validate
+      if (!reportUrl) {
+        showFeedback('error', '⚠️', 'No URL to report.');
+        return;
+      }
+
+      // Loading state
+      btn.classList.add('loading');
+      btn.textContent = '⏳ Submitting...';
+      feedback.className = 'feedback';
+      feedback.style.display = 'none';
+
+      try {
+        const res = await fetch(`${API_BASE}/report`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: reportUrl,
+            report_type: reportType,
+            description: description,
+            email: email || undefined,
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+        showFeedback('success', '✅', 'Report submitted successfully! Thank you for helping keep the web safe.');
+
+        // Disable form after success
+        document.getElementById('report-type').disabled = true;
+        document.getElementById('report-description').disabled = true;
+        document.getElementById('report-email').disabled = true;
+        btn.style.display = 'none';
+
+      } catch (err) {
+        showFeedback('error', '❌', `Failed to submit report: ${err.message}. Please try again.`);
+        btn.classList.remove('loading');
+        btn.textContent = '🚩 Submit Report';
+      }
+    });
+
+    function showFeedback(type, icon, message) {
+      const feedback = document.getElementById('feedback');
+      feedback.className = `feedback ${type}`;
+      feedback.innerHTML = `<span class="feedback-icon">${icon}</span><span>${message}</span>`;
+      feedback.style.display = 'flex';
+    }
+  </script>
+</body>
+</html>

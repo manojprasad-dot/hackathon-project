@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishGuard — Weekly Security Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #0a0a0f;
+      color: #f0f0f0;
+      font-family: 'Outfit', 'Inter', sans-serif;
+      padding: 40px 20px 60px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 20% 10%, rgba(102,126,234,0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 90%, rgba(118,75,162,0.04) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .page-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .page-header .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-header .subtitle {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .date-range {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      font-size: 12px;
+      color: #888;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Glass card */
+    .glass-card {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+      animation: cardFade 0.5s ease;
+    }
+
+    @keyframes cardFade {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    /* Score Circle */
+    .score-section {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .score-ring-container {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 16px;
+    }
+
+    .score-ring-container svg {
+      transform: rotate(-90deg);
+    }
+
+    .score-ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.05);
+      stroke-width: 10;
+    }
+
+    .score-ring-fill {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s;
+    }
+
+    .score-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .score-value .number {
+      font-size: 48px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+    }
+
+    .score-value .label {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    .score-status {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .stat-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 4px;
+    }
+
+    .stat-number.blue { color: #4facfe; }
+    .stat-number.red { color: #ff5252; }
+    .stat-number.green { color: #00e676; }
+    .stat-number.purple { color: #764ba2; }
+
+    /* Risk Distribution */
+    .risk-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .risk-bar-label {
+      width: 90px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #aaa;
+      flex-shrink: 0;
+    }
+
+    .risk-bar-track {
+      flex: 1;
+      height: 10px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0;
+    }
+
+    .risk-bar-fill.safe { background: linear-gradient(90deg, #00e676, #69f0ae); }
+    .risk-bar-fill.warning { background: linear-gradient(90deg, #ffc107, #ffca28); }
+    .risk-bar-fill.danger { background: linear-gradient(90deg, #ff5252, #f5576c); }
+
+    .risk-bar-count {
+      width: 36px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #888;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* Dangerous Sites */
+    .danger-list {
+      list-style: none;
+    }
+
+    .danger-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .danger-item:last-child { border-bottom: none; }
+
+    .danger-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff5252;
+      box-shadow: 0 0 8px rgba(255,82,82,0.4);
+      flex-shrink: 0;
+    }
+
+    .danger-url {
+      flex: 1;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #ccc;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .danger-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: rgba(255,82,82,0.12);
+      color: #ff5252;
+      border: 1px solid rgba(255,82,82,0.2);
+      flex-shrink: 0;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: #555;
+      font-size: 13px;
+      padding: 24px 0;
+    }
+
+    .empty-msg .ico { font-size: 28px; opacity: 0.4; margin-bottom: 8px; }
+
+    /* Security Tips */
+    .tip-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .tip-item:last-child { border-bottom: none; }
+
+    .tip-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(102,126,234,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .tip-text {
+      font-size: 13px;
+      color: #bbb;
+      line-height: 1.5;
+    }
+
+    .tip-text strong {
+      color: #f0f0f0;
+      display: block;
+      margin-bottom: 2px;
+      font-size: 13px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 32px 0 0;
+      color: #333;
+      font-size: 12px;
+    }
+
+    .footer span {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="logo-row">
+        <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
+          <path d="M14 3L4 8v7c0 5.83 4.27 11.28 10 12.6C19.73 26.28 24 20.83 24 15V8L14 3z"
+                fill="rgba(102,126,234,0.15)" stroke="#667eea" stroke-width="1.5"/>
+          <path d="M10 14l3 3 5-5" stroke="#667eea" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h1>Weekly Security Report</h1>
+      </div>
+      <p class="subtitle">Your browsing security summary</p>
+      <div class="date-range" id="date-range">Loading...</div>
+    </div>
+
+    <!-- Security Score -->
+    <div class="glass-card">
+      <div class="card-title">Security Score</div>
+      <div class="score-section">
+        <div class="score-ring-container">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <circle class="score-ring-bg" cx="90" cy="90" r="78"/>
+            <circle class="score-ring-fill" id="score-ring" cx="90" cy="90" r="78"
+                    stroke-dasharray="490" stroke-dashoffset="490"/>
+          </svg>
+          <div class="score-value">
+            <div class="number" id="score-number">0</div>
+            <div class="label">/ 100</div>
+          </div>
+        </div>
+        <div class="score-status" id="score-status">Calculating...</div>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="glass-card">
+      <div class="card-title">Weekly Statistics</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🔍</div>
+          <div class="stat-number blue" id="stat-scanned">0</div>
+          <div class="stat-label">Sites Scanned</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🛑</div>
+          <div class="stat-number red" id="stat-threats">0</div>
+          <div class="stat-label">Threats Blocked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-number green" id="stat-safe">0</div>
+          <div class="stat-label">Safe Sites</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📧</div>
+          <div class="stat-number purple" id="stat-emails">0</div>
+          <div class="stat-label">Emails Scanned</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Distribution -->
+    <div class="glass-card">
+      <div class="card-title">Risk Distribution</div>
+      <div id="risk-distribution">
+        <div class="risk-bar-row">
+          <div class="risk-bar-label">Safe (0-30)</div>
+          <div class="risk-bar-track"><div class="risk-bar-fill safe" id="risk-safe"></div></div>
+          <div class="risk-bar-count" id="risk-safe-count">0</div>
+        </div>
+        <div class="risk-bar-row">
+          <div class="risk-bar-label">Warning (31-60)</div>
+          <div class="risk-bar-track"><div class="risk-bar-fill warning" id="risk-warning"></div></div>
+          <div class="risk-bar-count" id="risk-warning-count">0</div>
+        </div>
+        <div class="risk-bar-row">
+          <div class="risk-bar-label">Danger (61-100)</div>
+          <div class="risk-bar-track"><div class="risk-bar-fill danger" id="risk-danger"></div></div>
+          <div class="risk-bar-count" id="risk-danger-count">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dangerous Sites -->
+    <div class="glass-card">
+      <div class="card-title">Most Dangerous Sites Encountered</div>
+      <ul class="danger-list" id="danger-list">
+        <div class="empty-msg"><div class="ico">🎉</div>No dangerous sites detected this week!</div>
+      </ul>
+    </div>
+
+    <!-- Security Tips -->
+    <div class="glass-card">
+      <div class="card-title">Security Tips</div>
+      <div id="tips-list"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      Powered by <span>PhishGuard</span> — AI-Powered Phishing Protection
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Date range
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      document.getElementById('date-range').textContent = `${fmt(weekAgo)} — ${fmt(now)}`;
+
+      // Load data from chrome.storage
+      const data = await chrome.storage.local.get(['stats', 'alerts', 'emailScanStats', 'feedbackLog']);
+      const stats = data.stats || { totalScanned: 0, phishingDetected: 0, safeDetected: 0 };
+      const alerts = data.alerts || [];
+      const emailStats = data.emailScanStats || { totalScanned: 0 };
+
+      // Filter alerts to last 7 days
+      const weekMs = 7 * 24 * 60 * 60 * 1000;
+      const weeklyAlerts = alerts.filter(a => {
+        const t = new Date(a.timestamp).getTime();
+        return (now.getTime() - t) < weekMs;
+      });
+
+      // Calculate weekly metrics
+      const weeklyScanned = weeklyAlerts.length || stats.totalScanned;
+      const weeklyThreats = weeklyAlerts.filter(a => a.is_phishing || a.result === 'phishing').length || stats.phishingDetected;
+      const weeklySafe = weeklyAlerts.filter(a => !a.is_phishing && a.result !== 'phishing').length || stats.safeDetected;
+      const weeklyEmails = emailStats.totalScanned || 0;
+
+      // Security score (100 = perfect, lower if more threats)
+      let score = 100;
+      if (weeklyScanned > 0) {
+        const threatRatio = weeklyThreats / weeklyScanned;
+        score = Math.max(0, Math.round(100 - (threatRatio * 200)));
+      }
+      score = Math.min(100, Math.max(0, score));
+
+      // Animate score ring
+      const circumference = 2 * Math.PI * 78; // ~490
+      const ring = document.getElementById('score-ring');
+      const offset = circumference - (score / 100) * circumference;
+
+      let ringColor = '#00e676';
+      let statusText = '🛡️ Excellent — Your browsing is secure!';
+      if (score < 70) { ringColor = '#ffc107'; statusText = '⚠️ Fair — Some threats were detected'; }
+      if (score < 40) { ringColor = '#ff5252'; statusText = '🚨 At Risk — Multiple threats detected!'; }
+
+      ring.style.stroke = ringColor;
+      setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
+
+      // Animate score number
+      animateCounter('score-number', score, 1500);
+      document.getElementById('score-status').textContent = statusText;
+      document.getElementById('score-status').style.color = ringColor;
+
+      // Animate stat counters
+      animateCounter('stat-scanned', weeklyScanned, 1000);
+      animateCounter('stat-threats', weeklyThreats, 1000);
+      animateCounter('stat-safe', weeklySafe, 1000);
+      animateCounter('stat-emails', weeklyEmails, 1000);
+
+      // Risk distribution
+      const safeCount = weeklySafe;
+      const warnCount = weeklyAlerts.filter(a => {
+        const c = a.confidence || 0;
+        return c > 0.3 && c <= 0.6;
+      }).length;
+      const dangerCount = weeklyThreats;
+      const total = Math.max(safeCount + warnCount + dangerCount, 1);
+
+      setTimeout(() => {
+        document.getElementById('risk-safe').style.width = `${(safeCount / total) * 100}%`;
+        document.getElementById('risk-warning').style.width = `${(warnCount / total) * 100}%`;
+        document.getElementById('risk-danger').style.width = `${(dangerCount / total) * 100}%`;
+      }, 300);
+
+      document.getElementById('risk-safe-count').textContent = safeCount;
+      document.getElementById('risk-warning-count').textContent = warnCount;
+      document.getElementById('risk-danger-count').textContent = dangerCount;
+
+      // Dangerous sites
+      const dangerousSites = weeklyAlerts
+        .filter(a => a.is_phishing || a.result === 'phishing')
+        .slice(0, 8);
+
+      const dangerList = document.getElementById('danger-list');
+      if (dangerousSites.length > 0) {
+        dangerList.innerHTML = dangerousSites.map(a => {
+          const host = safeHost(a.url);
+          const conf = Math.round((a.confidence || 0) * 100);
+          return `<li class="danger-item">
+            <div class="danger-dot"></div>
+            <div class="danger-url" title="${a.url}">${host}</div>
+            <div class="danger-badge">${conf}% threat</div>
+          </li>`;
+        }).join('');
+      }
+
+      // Security tips (contextual)
+      const tips = generateTips(weeklyThreats, weeklyScanned, score);
+      const tipsList = document.getElementById('tips-list');
+      tipsList.innerHTML = tips.map(t => `
+        <div class="tip-item">
+          <div class="tip-icon">${t.icon}</div>
+          <div class="tip-text"><strong>${t.title}</strong>${t.desc}</div>
+        </div>
+      `).join('');
+
+      // Mark weekly report as viewed
+      chrome.storage.local.set({ lastWeeklyReport: Date.now() });
+    });
+
+    function animateCounter(id, target, duration) {
+      const el = document.getElementById(id);
+      const start = 0;
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(start + (target - start) * eased);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    function safeHost(u) {
+      try { return new URL(u).hostname; } catch { return u; }
+    }
+
+    function generateTips(threats, scanned, score) {
+      const tips = [];
+
+      if (threats > 0) {
+        tips.push({
+          icon: '🚨',
+          title: 'Stay Alert',
+          desc: `You encountered ${threats} threat${threats > 1 ? 's' : ''} this week. Avoid clicking links from unknown sources and always verify URLs before entering credentials.`
+        });
+      }
+
+      if (score >= 80) {
+        tips.push({
+          icon: '🌟',
+          title: 'Great Security Habits!',
+          desc: 'Your browsing patterns show excellent security awareness. Keep PhishGuard active to maintain protection.'
+        });
+      }
+
+      tips.push({
+        icon: '🔒',
+        title: 'Use HTTPS',
+        desc: 'Always ensure websites use HTTPS before entering personal information. Look for the padlock icon in the address bar.'
+      });
+
+      tips.push({
+        icon: '📧',
+        title: 'Email Vigilance',
+        desc: 'Use PhishGuard\'s Email Scanner to check suspicious emails. Phishing often starts with a convincing email.'
+      });
+
+      if (scanned < 10) {
+        tips.push({
+          icon: '🔍',
+          title: 'Browse Safely',
+          desc: 'PhishGuard works best with regular use. Keep it enabled to build a complete security profile.'
+        });
+      }
+
+      tips.push({
+        icon: '🔑',
+        title: 'Strong Passwords',
+        desc: 'Use unique, strong passwords for each site. Consider a password manager to keep track of them securely.'
+      });
+
+      return tips.slice(0, 5);
+    }
+  </script>
+</body>
+</html>
