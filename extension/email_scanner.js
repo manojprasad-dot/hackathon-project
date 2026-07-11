@@ -1,8 +1,6 @@
-// PhishGuard — email_scanner.js
-// Handles email scanning UI: file upload, paste, API calls, and result display
-
-const API_BASE = "https://phishguard-api-6dmc.onrender.com";
-const CHECK_EMAIL_ENDPOINT = `${API_BASE}/check_email`;
+// PhishGuard v4.0 — email_scanner.js
+// On-Device AI Edition: all inference runs locally via ONNX Runtime Web.
+// No server calls. Sends ANALYZE_EMAIL to background service worker.
 
 // ── Example emails ──────────────────────────────────────────────
 
@@ -225,21 +223,26 @@ scanBtn.addEventListener("click", async () => {
   document.head.appendChild(style);
 
   try {
-    const response = await fetch(CHECK_EMAIL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email_text: emailText,
-        sender: senderEl.value.trim(),
-        subject: subjectEl.value.trim(),
-      }),
+    // -- Local ONNX inference via background service worker ------------------
+    // No server call. Background.js runs ANALYZE_EMAIL using predictor.js + ONNX model.
+    const result = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          type:      "ANALYZE_EMAIL",
+          emailText: emailText,
+          sender:    senderEl.value.trim(),
+          subject:   subjectEl.value.trim(),
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(response);
+          }
+        }
+      );
     });
 
-    if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
-    }
-
-    const result = await response.json();
     displayResults(result);
 
   } catch (err) {

@@ -1,21 +1,15 @@
 // ============================================================
-// PhishGuard — gmail_scanner.js
+// PhishGuard v4.0 — gmail_scanner.js
 // MODULE 7: Automatic Email Phishing Scanner
 //
-// Automatically detects when a user opens an email in Gmail or
-// Outlook and scans it for phishing indicators in real-time.
-//
-// Uses simple polling (every 1.5s) to detect email changes.
-// This is the most reliable approach for SPAs like Gmail that
-// don't trigger page reloads when navigating between emails.
+// Detects when user opens an email in Gmail or Outlook and
+// scans it locally using ONNX Runtime Web via background.js.
+// Zero network calls. Works offline after installation.
 //
 // Supported:
 //   ✔ Gmail (mail.google.com)
 //   ✔ Outlook Web (outlook.live.com, outlook.office.com)
 // ============================================================
-
-const API_BASE = "https://phishguard-api-6dmc.onrender.com";
-const CHECK_EMAIL_URL = `${API_BASE}/check_email`;
 
 // The fingerprint of the last scanned email — prevents re-scanning
 // the same email while it's still on screen.
@@ -182,7 +176,7 @@ function pollOutlook() {
   scanEmail(bodyText, bodyHtml, sender, subject, readingPane);
 }
 
-// ── Send email to backend for analysis ───────────────────────
+// ── Run local ONNX email analysis ────────────────────────────
 
 async function scanEmail(bodyText, bodyHtml, sender, subject, containerEl) {
   isScanning = true;
@@ -190,35 +184,31 @@ async function scanEmail(bodyText, bodyHtml, sender, subject, containerEl) {
   // Remove any existing PhishGuard banners on the page
   document.querySelectorAll(".pg-email-banner").forEach(b => b.remove());
 
-  // Show scanning indicator
+  // Show scanning indicator immediately
   showEmailBanner(containerEl, "scanning", null);
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort("Email scan timed out"), 60000);
-
-    const res = await fetch(CHECK_EMAIL_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Extension-ID": chrome.runtime.id,
-      },
-      body: JSON.stringify({
-        email_text: bodyText,
-        email_html: bodyHtml || "",
-        sender: sender,
-        subject: subject,
-      }),
-      signal: controller.signal,
+    // -- Local ONNX inference via background service worker ------------------
+    // No server call. Background.js handles ANALYZE_EMAIL using predictor.js.
+    const result = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          type:      "ANALYZE_EMAIL",
+          emailText: bodyText,
+          sender:    sender,
+          subject:   subject,
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(response);
+          }
+        }
+      );
     });
 
-    clearTimeout(timeout);
-
-    if (!res.ok) throw new Error(`Server ${res.status}`);
-
-    const result = await res.json();
-
-    console.log(`[PhishGuard Email] Result: ${result.result} (${(result.confidence * 100).toFixed(0)}%)`);
+    console.log(`[PhishGuard Email] Local result: ${result.result} (${(result.confidence * 100).toFixed(0)}%)`);
 
     // Show result banner (only if user is still on the same email)
     showEmailBanner(containerEl, result.result, result);

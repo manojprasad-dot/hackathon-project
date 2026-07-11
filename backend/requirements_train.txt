@@ -1,0 +1,10 @@
+# PhishGuard Training and ONNX Conversion Dependencies
+# Install with: pip install -r requirements_train.txt
+
+scikit-learn>=1.3.0
+pandas>=2.0.0
+numpy>=1.24.0
+ucimlrepo>=0.0.7
+skl2onnx>=1.15.0
+onnx>=1.14.0
+onnxruntime>=1.16.0
