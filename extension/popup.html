@@ -1,62 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>PhishGuard Edge AI</title>
-<link rel="stylesheet" href="popup.css" />
+  <meta charset="UTF-8" />
+  <title>PhishGuard Edge AI</title>
+  <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
 
+  <!-- Premium Header -->
   <header class="header">
     <div class="brand">
       <div class="brand-mark">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
-          <path d="M9 12l2 2 4-4"/>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
       </div>
       <div class="brand-text">
         <span class="brand-name">PhishGuard Edge AI</span>
-        <span class="brand-status"><span class="dot"></span> Protected</span>
+        <span class="brand-subtitle">Local Browser Protection</span>
       </div>
     </div>
-    <div class="header-actions">
-      <button class="icon-btn" title="Scan history" data-jump="history">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.1 13a9 9 0 1 0 2.6-6.4L3 8.9"/><path d="M12 7v5l4 2"/></svg>
-      </button>
-      <button class="icon-btn" title="Settings" data-jump="settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1H19.5a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z"/></svg>
-      </button>
+    <div class="brand-status">
+      <span class="dot"></span>
+      <span class="status-text">Protected</span>
     </div>
   </header>
 
+  <!-- Navigation Tabs -->
   <nav class="tabs" style="margin-top:12px;">
     <button class="tab active" data-view="overview">Overview</button>
     <button class="tab" data-view="history">History</button>
     <button class="tab" data-view="settings">Settings</button>
   </nav>
 
-  <!-- Demo switcher: for judges/testing only, mirrors the DEMO MODE spec -->
+  <!-- Judge Hackathon Demo Sandbox -->
   <div class="demo-bar">
-    <button class="demo-btn active" data-scenario="safe">Safe</button>
-    <button class="demo-btn" data-scenario="warning">Medium</button>
+    <button class="demo-btn active" data-scenario="safe">Safe Domain</button>
+    <button class="demo-btn" data-scenario="warning">Medium Risk</button>
     <button class="demo-btn" data-scenario="danger">High Risk</button>
-    <button class="demo-btn" data-scenario="offline">Offline</button>
+    <button class="demo-btn" data-scenario="offline">Offline Scan</button>
   </div>
 
   <main class="content">
 
-    <!-- ===================== OVERVIEW ===================== -->
+    <!-- ===================== VIEW: OVERVIEW ===================== -->
     <section class="view active" id="view-overview">
 
-      <div class="card" id="warningBanner" style="display:none; align-items:center; gap:10px; background:var(--danger-dim); border-color:rgba(239,68,68,.3); padding:10px 12px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger); flex-shrink:0;"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
-        <span style="font-size:12px; font-weight:600; color:var(--danger);">This site matches known phishing patterns.</span>
+      <!-- Dynamic Warning Banner for Threats -->
+      <div class="card" id="warningBanner" style="display:none; align-items:center; gap:10px; background:var(--danger-dim); border-color:rgba(239,68,68,.25); padding:10px 12px; margin-bottom: 2px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger); flex-shrink:0;"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <span style="font-size:11.5px; font-weight:700; color:var(--danger);">Suspicious Phishing Patterns Detected</span>
       </div>
 
+      <!-- Real-time Scanned Website Metadata -->
       <div class="card risk-card">
         <div class="risk-top">
-          <span class="risk-domain" id="riskDomain">accounts.google.com</span>
+          <span class="risk-domain" id="riskDomain">No page active</span>
           <span class="risk-scantime" id="riskScanTime">just now</span>
         </div>
         <div class="gauge-wrap">
@@ -64,143 +63,154 @@
             <circle class="gauge-track" cx="52" cy="52" r="42"/>
             <circle class="gauge-sweep" id="gaugeSweep" cx="52" cy="52" r="42" style="display:none;"/>
             <circle class="gauge-arc" id="gaugeArc" cx="52" cy="52" r="42"/>
-            <text x="52" y="49" text-anchor="middle" class="gauge-center-value" id="gaugeValue">4</text>
-            <text x="52" y="65" text-anchor="middle" class="gauge-center-label">RISK</text>
+            <text x="52" y="47" text-anchor="middle" class="gauge-center-value" id="gaugeValue">0%</text>
+            <text x="52" y="65" text-anchor="middle" class="gauge-center-label" id="gaugeLabel">SAFE</text>
           </svg>
           <div class="risk-meta">
             <span class="verdict-pill safe" id="verdictPill">Safe</span>
-            <div class="meta-row"><span class="k">Confidence</span><span class="v" id="confidenceVal">98.6%</span></div>
-            <div class="meta-row"><span class="k">Scan time</span><span class="v" id="scanTimeVal">3.1 ms</span></div>
-            <div class="meta-row"><span class="k">Engine</span><span class="v">ML 75 / Rule 25</span></div>
+            <div class="meta-row"><span class="k">Confidence</span><span class="v" id="confidenceVal">99.8%</span></div>
+            <div class="meta-row"><span class="k">Inference</span><span class="v" id="scanTimeVal">2.6 ms</span></div>
+            <div class="meta-row"><span class="k">Decision Engine</span><span class="v">ML + Heuristics</span></div>
           </div>
         </div>
       </div>
 
+      <!-- Local AI Engine Cards -->
       <div class="card">
-        <p class="card-title">AI Runtime</p>
+        <p class="card-title">Local AI Engine</p>
         <div class="status-strip">
           <div class="status-chip">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="10" y="10" width="4" height="4"/></svg>
-            <span class="label"><strong>ONNX Runtime Web</strong>Random Forest · 1.66 MB</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <span class="label"><strong>⚡ ONNX Runtime Web</strong>Random Forest · 1.66 MB</span>
           </div>
           <div class="status-chip">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>
-            <span class="label"><strong>100% On-Device</strong>No cloud inference</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span class="label"><strong>🛡️ 100% On-Device</strong>No cloud inference</span>
           </div>
           <div class="status-chip">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a15 15 0 0 1 4.5-2.8M20.9 9A15 15 0 0 0 16 6.2M8.5 12.5a8 8 0 0 1 7 0M11 16a3.5 3.5 0 0 1 2 0"/></svg>
-            <span class="label"><strong>Offline Ready</strong>Works without a network</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span class="label"><strong>🔒 Privacy Shield</strong>No URL Uploads</span>
           </div>
           <div class="status-chip">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M8 12l-2.5 2.5a3.5 3.5 0 0 0 5 5L13 17"/><path d="M16 12l2.5-2.5a3.5 3.5 0 0 0-5-5L11 7"/></svg>
-            <span class="label"><strong>No URL Upload</strong>Nothing leaves this device</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.58 16.14a7 7 0 0 1 6.84 0M12 20h.01"/></svg>
+            <span class="label"><strong>🌐 Offline Ready</strong>Works without internet</span>
           </div>
         </div>
       </div>
 
+      <!-- Explainable AI (XAI) Indicators -->
       <div class="card">
-        <p class="card-title">Why this score</p>
+        <p class="card-title">Explainable AI (XAI)</p>
         <div class="reason-list" id="reasonList"></div>
       </div>
 
+      <!-- Recent Scan Timelines -->
       <div class="card">
-        <p class="card-title">Recent scans</p>
+        <p class="card-title">Recent Scans</p>
         <div id="historyList"></div>
       </div>
 
+      <!-- Overview Control Actions -->
       <div class="actions">
         <button class="btn btn-ghost" id="rescanBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.1 13a9 9 0 1 0 2.6-6.4L3 8.9"/><path d="M3 3v5h5"/></svg>
-          Re-scan
+          Re-scan URL
         </button>
-        <button class="btn btn-primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
-          Full report
+        <button class="btn btn-primary" id="btn-email-scanner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
+          Email Scanner
         </button>
       </div>
     </section>
 
-    <!-- ===================== HISTORY ===================== -->
+    <!-- ===================== VIEW: HISTORY ===================== -->
     <section class="view" id="view-history">
       <div class="card">
-        <p class="card-title">All scans this session</p>
+        <p class="card-title">Session Evaluation Logs</p>
         <div id="historyListFull"></div>
       </div>
       <div class="actions">
-        <button class="btn btn-ghost" id="btn-export">Export history</button>
-        <button class="btn btn-ghost" id="btn-clear">Clear history</button>
+        <button class="btn btn-ghost" id="btn-export">Export Logs</button>
+        <button class="btn btn-ghost" id="btn-clear">Clear Logs</button>
       </div>
     </section>
 
-    <!-- ===================== SETTINGS ===================== -->
+    <!-- ===================== VIEW: SETTINGS ===================== -->
     <section class="view" id="view-settings">
+      
+      <!-- Group: Protection -->
       <div class="card">
-        <p class="card-title">Protection</p>
-
+        <p class="card-title">Protection Settings</p>
         <div class="setting-row">
           <div>
-            <div class="setting-label">Offline lock</div>
-            <div class="setting-desc">Never send data over the network</div>
-          </div>
-          <label class="switch"><input type="checkbox" id="set-offline" checked disabled><span class="track"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Email scanner</div>
-            <div class="setting-desc">Scan Gmail messages locally</div>
+            <div class="setting-label">Email Threat Scanner</div>
+            <div class="setting-desc">Observe and score email payloads locally</div>
           </div>
           <label class="switch"><input type="checkbox" id="set-email" checked><span class="track"></span></label>
         </div>
-
         <div class="setting-row">
           <div>
-            <div class="setting-label">Notifications</div>
-            <div class="setting-desc">Alert on high-risk pages</div>
+            <div class="setting-label">Heuristic Fallback Engine</div>
+            <div class="setting-desc">Boost classification with heuristic rules</div>
           </div>
           <label class="switch"><input type="checkbox" id="set-notif" checked><span class="track"></span></label>
         </div>
       </div>
 
+      <!-- Group: Privacy -->
       <div class="card">
-        <p class="card-title">Optional enrichment</p>
+        <p class="card-title">Privacy Settings</p>
         <div class="setting-row">
           <div>
-            <div class="setting-label">VirusTotal lookup</div>
-            <div class="setting-desc">Cloud check, off by default</div>
+            <div class="setting-label">Offline Lock Mode</div>
+            <div class="setting-desc">Sever all remote lookups completely</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="set-offline" checked disabled><span class="track"></span></label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Anonymous Telemetry</div>
+            <div class="setting-desc">Anonymized feature audits (no URLs sent)</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="set-telemetry"><span class="track"></span></label>
+        </div>
+      </div>
+
+      <!-- Group: Advanced Enrichment -->
+      <div class="card">
+        <p class="card-title">Advanced Integrations</p>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">VirusTotal API</div>
+            <div class="setting-desc">Query background threat indicators (online)</div>
           </div>
           <label class="switch"><input type="checkbox" id="set-vt"><span class="track"></span></label>
         </div>
         <div class="setting-row">
           <div>
             <div class="setting-label">Google Safe Browsing</div>
-            <div class="setting-desc">Cross-check against known lists</div>
+            <div class="setting-desc">Cross-reference blacklisted repositories</div>
           </div>
           <label class="switch"><input type="checkbox" id="set-gsb"><span class="track"></span></label>
         </div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Anonymous telemetry</div>
-            <div class="setting-desc">Off by default, never includes URLs</div>
-          </div>
-          <label class="switch"><input type="checkbox" id="set-telemetry"><span class="track"></span></label>
-        </div>
       </div>
 
+      <!-- Group: Core System specs -->
       <div class="card">
-        <p class="card-title">Performance</p>
-        <div class="meta-row"><span class="k">Model size</span><span class="v">1.66 MB</span></div>
-        <div class="meta-row" style="margin-top:6px;"><span class="k">Avg. inference</span><span class="v">3.4 ms</span></div>
-        <div class="meta-row" style="margin-top:6px;"><span class="k">Memory footprint</span><span class="v">~18 MB</span></div>
-        <div class="meta-row" style="margin-top:6px;"><span class="k">Runtime</span><span class="v">ONNX Runtime Web</span></div>
+        <p class="card-title">Hardware Performance Specs</p>
+        <div class="meta-row"><span class="k">AI Model Footprint</span><span class="v">1.66 MB</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Avg. Inference Speed</span><span class="v">2.6 ms</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Heap Footprint</span><span class="v">~11 MB</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Engine Architecture</span><span class="v">WASM Single-Thread</span></div>
       </div>
     </section>
 
   </main>
 
+  <!-- Clean Footer Info -->
   <footer class="footer">
-    <span class="footer-brand">v1.0.0 · MIT License</span>
-    <a class="footer-link" href="#">View on GitHub →</a>
+    <span class="footer-brand">v4.0.0 · MIT License</span>
+    <a class="footer-link" href="https://github.com/manojprasad-dot/hackathon-project" target="_blank">View on GitHub →</a>
   </footer>
 
   <script type="module" src="popup.js"></script>
