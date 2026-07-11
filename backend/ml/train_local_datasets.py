@@ -133,7 +133,16 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
     print("\n[3/5] Training 100-Tree RandomForest Classifier...")
-    model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
+    model = RandomForestClassifier(
+        n_estimators=100,
+        max_depth=15,
+        min_samples_split=5,
+        min_samples_leaf=2,
+        max_features="sqrt",
+        class_weight="balanced",
+        random_state=42,
+        n_jobs=-1,
+    )
     model.fit(X_train, y_train)
 
     # Evaluate
@@ -159,8 +168,13 @@ def main():
     # Convert to ONNX
     print("\n[5/5] Exporting RandomForest to ONNX format...")
     initial_type = [('float_input', FloatTensorType([None, len(MODEL_FEATURE_NAMES)]))]
-    # Disable ZipMap to get raw class probabilities tensor
-    onnx_model = convert_sklearn(model, initial_types=initial_type, options={'zipmap': False})
+    # Disable ZipMap to get raw class probabilities tensor, and match target_opset=17
+    onnx_model = convert_sklearn(
+        model,
+        initial_types=initial_type,
+        target_opset=17,
+        options={'zipmap': False}
+    )
 
     # Save local ONNX
     onnx_path = "d:/hackathon-project/backend/ml/model.onnx"
