@@ -1,4 +1,4 @@
-﻿// =============================================================
+// =============================================================
 // PhishGuard v4.0 -- extension/background.js
 // MODULE: Browser Extension Service Worker
 //
@@ -29,6 +29,7 @@ let stats = { totalScanned: 0, phishingDetected: 0, safeDetected: 0, errors: 0 }
 
 // Track tabs with in-flight scans to prevent duplicate concurrent requests.
 const scanningTabs = new Set();
+const activeScans = new Map();
 
 // -- Extension installed / updated ----------------------------------------
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -147,6 +148,10 @@ async function analyzeURL(url, tabId) {
 
   // Show result immediately
   sendToContentScript(tabId, legacyResult, url);
+
+  // Cache scan result to prevent race conditions with content.js loaded on document_idle
+  if (activeScans.size > 150) activeScans.clear();
+  activeScans.set(url, legacyResult);
 
   // Optional: VirusTotal enrichment in background (fire-and-forget)
   // Never blocks the local result. Only runs when online.
@@ -290,6 +295,22 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 // -- Message handler (popup + content scripts) ----------------------------
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+  if (msg.type === "PAGE_READY") {
+    const url = msg.url;
+    if (activeScans.has(url)) {
+      reply(activeScans.get(url));
+    } else {
+      // Trigger evaluation and reply once complete
+      analyzeURL(url, sender.tab.id).then(() => {
+        reply(activeScans.get(url) || { result: "safe", confidence: 1.0, is_phishing: false });
+      }).catch(() => {
+        reply({ result: "safe", confidence: 1.0, is_phishing: false });
+      });
+      return true; // Keep message channel open for async response
+    }
+    return;
+  }
+
   if (msg.type === "GET_STATS") {
     reply({ stats });
     return true;
