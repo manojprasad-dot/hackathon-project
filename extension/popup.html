@@ -1,1402 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PhishGuard Edge AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      user-select: none;
-    }
-
-    :root {
-      --bg-darker: #06070a;
-      --bg-main: #0b0c10;
-      --bg-card: #11131a;
-      --bg-card-hover: #171a24;
-      --border-thin: rgba(255, 255, 255, 0.05);
-      --border-glow: rgba(10, 132, 255, 0.15);
-      
-      /* Colors */
-      --color-safe: #10b981;
-      --color-safe-glow: rgba(16, 185, 129, 0.15);
-      --color-warning: #f59e0b;
-      --color-warning-glow: rgba(245, 158, 11, 0.15);
-      --color-danger: #ef4444;
-      --color-danger-glow: rgba(239, 68, 68, 0.15);
-      --color-primary: #3b82f6;
-      --color-primary-glow: rgba(59, 130, 246, 0.15);
-      --color-purple: #a855f7;
-      --color-purple-glow: rgba(168, 85, 247, 0.15);
-      
-      /* Typography */
-      --text-main: #f3f4f6;
-      --text-muted: #6b7280;
-      --text-dim: #9ca3af;
-    }
-
-    body {
-      width: 600px;
-      height: 520px;
-      background: var(--bg-darker);
-      color: var(--text-main);
-      font-family: 'Outfit', sans-serif;
-      overflow: hidden;
-      display: flex;
-    }
-
-    /* ══ SIDE NAVIGATION ══════════════════════════════════════ */
-    .sidebar {
-      width: 64px;
-      background: var(--bg-darker);
-      border-right: 1px solid var(--border-thin);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px 0;
-      gap: 12px;
-      z-index: 10;
-    }
-
-    .brand-icon {
-      width: 36px;
-      height: 36px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1));
-      border: 1px solid var(--border-glow);
-      border-radius: 10px;
-      color: var(--color-primary);
-      cursor: pointer;
-    }
-
-    .nav-item {
-      width: 42px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 10px;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-
-    .nav-item:hover {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .nav-item.active {
-      color: var(--color-primary);
-      background: rgba(59, 130, 246, 0.08);
-      border: 1px solid rgba(59, 130, 246, 0.15);
-    }
-
-    /* Tooltip */
-    .nav-item::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      left: 54px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      color: var(--text-main);
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateX(-5px);
-      transition: all 0.2s ease;
-      z-index: 100;
-    }
-
-    .nav-item:hover::after {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    /* ══ MAIN WINDOW ══════════════════════════════════════════ */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-main);
-      height: 100%;
-      position: relative;
-    }
-
-    /* Top bar */
-    .topbar {
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--border-thin);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(11, 12, 16, 0.5);
-      backdrop-filter: blur(10px);
-    }
-
-    .topbar-title-wrap h1 {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
-
-    .topbar-title-wrap p {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--color-safe);
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.2);
-      padding: 4px 12px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--color-safe);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--color-safe);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
-    }
-
-    /* View panels container */
-    .panel-container {
-      flex: 1;
-      padding: 20px 24px;
-      overflow-y: auto;
-      height: calc(100% - 69px);
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.05) transparent;
-    }
-
-    .panel {
-      display: none;
-      animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      height: 100%;
-    }
-
-    .panel.active {
-      display: flex;
-      flex-direction: column;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ══ VIEW: DASHBOARD (HOME) ═══════════════════════════════ */
-    .dash-grid {
-      display: flex;
-      gap: 20px;
-      height: 100%;
-      align-items: flex-start;
-    }
-
-    .dash-left {
-      flex: 1.1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 16px;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .dash-left::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(circle at 50% 30%, var(--glow-color, rgba(16, 185, 129, 0.04)) 0%, transparent 60%);
-      transition: background 0.4s ease;
-    }
-
-    .dash-left.phishing { --glow-color: rgba(239, 68, 68, 0.08); }
-    .dash-left.warning { --glow-color: rgba(245, 158, 11, 0.08); }
-
-    /* Animated circular gauge */
-    .gauge-container {
-      position: relative;
-      width: 150px;
-      height: 150px;
-      margin-bottom: 12px;
-    }
-
-    .gauge-svg {
-      transform: rotate(-90deg);
-    }
-
-    .gauge-bg {
-      fill: none;
-      stroke: #1f2937;
-      stroke-width: 8;
-    }
-
-    .gauge-fill {
-      fill: none;
-      stroke-width: 8;
-      stroke-linecap: round;
-      stroke-dasharray: 408;
-      stroke-dashoffset: 408;
-      transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
-    }
-
-    .gauge-center {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-    }
-
-    .gauge-val {
-      font-size: 32px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      letter-spacing: -1px;
-    }
-
-    .gauge-lbl {
-      font-size: 9px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 4px;
-      font-weight: 700;
-    }
-
-    .url-display {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--text-dim);
-      background: rgba(0,0,0,0.2);
-      border: 1px solid var(--border-thin);
-      padding: 6px 12px;
-      border-radius: 8px;
-      width: 100%;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 12px;
-    }
-
-    .verdict-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .verdict-badge.safe { color: var(--color-safe); }
-    .verdict-badge.phishing { color: var(--color-danger); }
-    .verdict-badge.warning { color: var(--color-warning); }
-
-    .dash-right {
-      flex: 1.2;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      height: 100%;
-    }
-
-    .live-metrics-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .metric-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .metric-lbl {
-      font-size: 10px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      font-weight: 600;
-    }
-
-    .metric-val {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-top: 4px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .metric-val.green { color: var(--color-safe); }
-    .metric-val.blue { color: var(--color-primary); }
-
-    /* Privacy Banner */
-    .privacy-banner {
-      background: rgba(59, 130, 246, 0.03);
-      border: 1px dashed rgba(59, 130, 246, 0.2);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .privacy-banner svg {
-      color: var(--color-primary);
-      flex-shrink: 0;
-    }
-
-    /* ══ VIEW: EXPLAINABLE AI ═════════════════════════════════ */
-    .xai-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .xai-container {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      overflow-y: auto;
-      max-height: 320px;
-      padding-right: 4px;
-    }
-
-    .xai-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 12px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      transition: all 0.2s ease;
-    }
-
-    .xai-card:hover {
-      border-color: rgba(255,255,255,0.08);
-      background: var(--bg-card-hover);
-    }
-
-    .xai-severity {
-      width: 8px;
-      height: 36px;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-
-    .xai-severity.critical { background: var(--color-danger); box-shadow: 0 0 8px var(--color-danger-glow); }
-    .xai-severity.high { background: var(--color-warning); box-shadow: 0 0 8px var(--color-warning-glow); }
-    .xai-severity.medium { background: var(--color-primary); box-shadow: 0 0 8px var(--color-primary-glow); }
-    .xai-severity.info { background: var(--text-muted); }
-
-    .xai-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .xai-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2px;
-    }
-
-    .xai-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .xai-badge {
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
-
-    .xai-badge.critical { background: var(--color-danger-glow); color: var(--color-danger); }
-    .xai-badge.high { background: var(--color-warning-glow); color: var(--color-warning); }
-    .xai-badge.medium { background: var(--color-primary-glow); color: var(--color-primary); }
-    .xai-badge.info { background: rgba(255,255,255,0.05); color: var(--text-dim); }
-
-    .xai-desc {
-      font-size: 11px;
-      color: var(--text-dim);
-      line-height: 1.4;
-    }
-
-    .xai-rec {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 4px;
-      font-style: italic;
-    }
-
-    .xai-weight-wrap {
-      text-align: right;
-      flex-shrink: 0;
-    }
-
-    .xai-weight {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .xai-weight-lbl {
-      font-size: 8px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-
-    /* ══ VIEW: RECENT HISTORY ═════════════════════════════════ */
-    .history-container {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      overflow-y: auto;
-      max-height: 360px;
-    }
-
-    .hist-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 12px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: background 0.2s ease;
-    }
-
-    .hist-card:hover {
-      background: var(--bg-card-hover);
-    }
-
-    .hist-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .hist-icon {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      background: rgba(255,255,255,0.03);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .hist-meta {
-      min-width: 0;
-    }
-
-    .hist-domain {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-main);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .hist-sub {
-      font-size: 10px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 1px;
-    }
-
-    .hist-tag {
-      background: rgba(255,255,255,0.04);
-      padding: 1px 4px;
-      border-radius: 3px;
-      font-size: 8px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .hist-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
-    }
-
-    .hist-score {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .hist-score.safe { color: var(--color-safe); }
-    .hist-score.phishing { color: var(--color-danger); }
-    .hist-score.warning { color: var(--color-warning); }
-
-    .hist-badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 8px;
-      text-transform: uppercase;
-    }
-
-    .hist-badge.safe { background: var(--color-safe-glow); color: var(--color-safe); }
-    .hist-badge.phishing { background: var(--color-danger-glow); color: var(--color-danger); }
-    .hist-badge.warning { background: var(--color-warning-glow); color: var(--color-warning); }
-
-    /* ══ VIEW: PERFORMANCE ════════════════════════════════════ */
-    .perf-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .perf-chart-card {
-      grid-column: span 2;
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ══ VIEW: ARCHITECTURE ═══════════════════════════════════ */
-    .arch-flow {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
-      position: relative;
-      padding: 10px 0;
-    }
-
-    .arch-node {
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 10px;
-      padding: 8px 16px;
-      width: 280px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-
-    .arch-node.active {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 12px var(--color-primary-glow);
-      background: var(--bg-card-hover);
-    }
-
-    .arch-node-num {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-dim);
-    }
-
-    .arch-node.active .arch-node-num {
-      background: var(--color-primary);
-      color: white;
-    }
-
-    .arch-node-txt {
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .arch-arrow {
-      width: 2px;
-      height: 12px;
-      background: var(--border-thin);
-      position: relative;
-    }
-
-    .arch-arrow.active {
-      background: var(--color-primary);
-      box-shadow: 0 0 8px var(--color-primary);
-    }
-
-    /* ══ VIEW: SETTINGS ═══════════════════════════════════════ */
-    .settings-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .settings-row {
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 12px;
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: background 0.2s;
-    }
-
-    .settings-row:hover {
-      background: var(--bg-card-hover);
-    }
-
-    .settings-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .settings-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .settings-desc {
-      font-size: 10.5px;
-      color: var(--text-muted);
-    }
-
-    /* Custom Switch Toggle */
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 36px;
-      height: 20px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background-color: #2d3748;
-      transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 20px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 14px;
-      width: 14px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: var(--color-primary);
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(16px);
-    }
-
-    .btn-danger-outline {
-      background: transparent;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      color: var(--color-danger);
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s;
-      width: 100%;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .btn-danger-outline:hover {
-      background: rgba(239, 68, 68, 0.08);
-      border-color: var(--color-danger);
-    }
-
-    /* ══ VIEW: ABOUT ══════════════════════════════════════════ */
-    .about-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 16px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .about-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-      padding-bottom: 8px;
-    }
-
-    .about-row:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .about-lbl {
-      color: var(--text-muted);
-    }
-
-    .about-val {
-      color: var(--text-main);
-      font-weight: 600;
-    }
-
-    /* ══ VIEW: DEMO SANDBOX ═══════════════════════════════════ */
-    .sandbox-intro {
-      font-size: 12px;
-      color: var(--text-dim);
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-
-    .sandbox-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .sandbox-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-thin);
-      border-radius: 12px;
-      padding: 14px 16px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      text-align: left;
-    }
-
-    .sandbox-card:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--color-primary);
-      transform: translateY(-2px);
-    }
-
-    .sandbox-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .sandbox-url {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--text-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .sandbox-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 9px;
-      font-weight: 800;
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-
-    .sandbox-status.safe { color: var(--color-safe); }
-    .sandbox-status.phishing { color: var(--color-danger); }
-    .sandbox-status.warning { color: var(--color-warning); }
-
-    /* ══ REAL-TIME SCAN OVERLAY ══════════════════════════════ */
-    .scan-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(6, 7, 10, 0.95);
-      z-index: 200;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      backdrop-filter: blur(10px);
-    }
-
-    .scan-overlay.active {
-      display: flex;
-    }
-
-    .scan-spinner {
-      position: relative;
-      width: 72px;
-      height: 72px;
-      margin-bottom: 24px;
-    }
-
-    .scan-spinner svg {
-      transform: rotate(-90deg);
-    }
-
-    .scan-spinner-bg {
-      fill: none;
-      stroke: rgba(255,255,255,0.03);
-      stroke-width: 4;
-    }
-
-    .scan-spinner-fill {
-      fill: none;
-      stroke: var(--color-primary);
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-dasharray: 201;
-      stroke-dashoffset: 150;
-      animation: spinOffset 1.4s ease-in-out infinite;
-    }
-
-    @keyframes spinOffset {
-      0% { stroke-dashoffset: 201; transform: rotate(0deg); }
-      50% { stroke-dashoffset: 50; transform: rotate(180deg); }
-      100% { stroke-dashoffset: 201; transform: rotate(360deg); }
-    }
-
-    .scan-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      letter-spacing: -0.3px;
-    }
-
-    .scan-subtitle {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-    }
-
-    .scan-steps {
-      width: 260px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .scan-step {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--text-muted);
-      transition: all 0.2s;
-    }
-
-    .scan-step.active {
-      color: var(--text-main);
-      font-weight: 600;
-    }
-
-    .scan-step.done {
-      color: var(--color-safe);
-    }
-
-    .scan-step-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-muted);
-    }
-
-    .scan-step.active .scan-step-dot {
-      background: var(--color-primary);
-      box-shadow: 0 0 6px var(--color-primary);
-    }
-
-    .scan-step.done .scan-step-dot {
-      background: var(--color-safe);
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>PhishGuard Edge AI</title>
+<link rel="stylesheet" href="popup.css" />
 </head>
 <body>
 
-  <!-- Sidebar Nav -->
-  <div class="sidebar">
-    <div class="brand-icon" id="logo-trigger" data-tooltip="Dashboard">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">PhishGuard Edge AI</span>
+        <span class="brand-status"><span class="dot"></span> Protected</span>
+      </div>
     </div>
-    
-    <div class="nav-item active" data-view="dashboard" data-tooltip="Overview">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/>
-        <rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>
-      </svg>
+    <div class="header-actions">
+      <button class="icon-btn" title="Scan history" data-jump="history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.1 13a9 9 0 1 0 2.6-6.4L3 8.9"/><path d="M12 7v5l4 2"/></svg>
+      </button>
+      <button class="icon-btn" title="Settings" data-jump="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1H19.5a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z"/></svg>
+      </button>
     </div>
-    
-    <div class="nav-item" data-view="explainable" data-tooltip="Explainable AI">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-4.12 2.5 2.5 0 0 1 0-4.88 2.5 2.5 0 0 1 0-4.12A2.5 2.5 0 0 1 9.5 2Z"/>
-        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-4.12 2.5 2.5 0 0 0 0-4.88 2.5 2.5 0 0 0 0-4.12A2.5 2.5 0 0 0 14.5 2Z"/>
-      </svg>
-    </div>
-    
-    <div class="nav-item" data-view="history" data-tooltip="Scan History">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/>
-      </svg>
-    </div>
+  </header>
 
-    <div class="nav-item" data-view="architecture" data-tooltip="AI Pipeline">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-      </svg>
-    </div>
+  <nav class="tabs" style="margin-top:12px;">
+    <button class="tab active" data-view="overview">Overview</button>
+    <button class="tab" data-view="history">History</button>
+    <button class="tab" data-view="settings">Settings</button>
+  </nav>
 
-    <div class="nav-item" data-view="performance" data-tooltip="Performance">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-      </svg>
-    </div>
-
-    <div class="nav-item" data-view="sandbox" data-tooltip="Demo Sandbox">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
-      </svg>
-    </div>
-
-    <div style="flex: 1;"></div>
-
-    <div class="nav-item" data-view="settings" data-tooltip="Settings">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    </div>
-    
-    <div class="nav-item" data-view="about" data-tooltip="About">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-      </svg>
-    </div>
+  <!-- Demo switcher: for judges/testing only, mirrors the DEMO MODE spec -->
+  <div class="demo-bar">
+    <button class="demo-btn active" data-scenario="safe">Safe</button>
+    <button class="demo-btn" data-scenario="warning">Medium</button>
+    <button class="demo-btn" data-scenario="danger">High Risk</button>
+    <button class="demo-btn" data-scenario="offline">Offline</button>
   </div>
 
-  <!-- Main View Area -->
-  <div class="main-content">
-    
-    <!-- Top Bar -->
-    <div class="topbar">
-      <div class="topbar-title-wrap">
-        <h1 id="view-title">Dashboard</h1>
-        <p id="view-subtitle">Real-time extension protection status</p>
+  <main class="content">
+
+    <!-- ===================== OVERVIEW ===================== -->
+    <section class="view active" id="view-overview">
+
+      <div class="card" id="warningBanner" style="display:none; align-items:center; gap:10px; background:var(--danger-dim); border-color:rgba(239,68,68,.3); padding:10px 12px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger); flex-shrink:0;"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <span style="font-size:12px; font-weight:600; color:var(--danger);">This site matches known phishing patterns.</span>
       </div>
-      <div class="status-badge">
-        <div class="status-dot"></div>
-        <span>Protected</span>
-      </div>
-    </div>
 
-    <!-- Active View Panel Container -->
-    <div class="panel-container">
-
-      <!-- PANEL: DASHBOARD -->
-      <div class="panel active" id="view-dashboard">
-        <div class="dash-grid">
-          
-          <!-- Gauge Card -->
-          <div class="dash-left" id="dash-card">
-            <div class="gauge-container">
-              <svg class="gauge-svg" width="150" height="150" viewBox="0 0 80 80">
-                <circle class="gauge-bg" cx="40" cy="40" r="26"/>
-                <circle class="gauge-fill" id="dash-gauge-fill" cx="40" cy="40" r="26"/>
-              </svg>
-              <div class="gauge-center">
-                <div class="gauge-val" id="dash-gauge-val">0%</div>
-                <div class="gauge-lbl">Risk</div>
-              </div>
-            </div>
-            <div class="url-display" id="dash-url">No page active</div>
-            <div class="verdict-badge safe" id="dash-verdict">
-              <span id="dash-verdict-ico">✓</span>
-              <span id="dash-verdict-txt">Safe Environment</span>
-            </div>
-          </div>
-
-          <!-- Stats Card Stack -->
-          <div class="dash-right">
-            <div class="live-metrics-title">Security Metrics</div>
-            
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span class="metric-lbl">Inference Latency</span>
-                <span class="metric-val blue" id="m-latency">0.0 ms</span>
-              </div>
-              <div class="metric-card">
-                <span class="metric-lbl">Threat Confidence</span>
-                <span class="metric-val" id="m-confidence">0.0%</span>
-              </div>
-              <div class="metric-card">
-                <span class="metric-lbl">Pages Scanned</span>
-                <span class="metric-val" id="m-scanned">0</span>
-              </div>
-              <div class="metric-card">
-                <span class="metric-lbl">Threats Blocked</span>
-                <span class="metric-val green" id="m-blocked">0</span>
-              </div>
-            </div>
-
-            <div class="privacy-banner">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <span><strong>100% Local Inference</strong>: URLs are analyzed on-device via WebAssembly. No data leaves your machine.</span>
-            </div>
-          </div>
-
+      <div class="card risk-card">
+        <div class="risk-top">
+          <span class="risk-domain" id="riskDomain">accounts.google.com</span>
+          <span class="risk-scantime" id="riskScanTime">just now</span>
         </div>
-      </div>
-
-      <!-- PANEL: EXPLAINABLE AI -->
-      <div class="panel" id="view-explainable">
-        <div class="xai-header">
-          <span class="live-metrics-title">Feature Importance Analysis</span>
-          <span class="xai-desc" id="xai-summary-text">No active indicators matching heuristics.</span>
-        </div>
-        <div class="xai-container" id="xai-list">
-          <div class="no-reasons">✓ System evaluated 30 model features. No threats found.</div>
-        </div>
-      </div>
-
-      <!-- PANEL: SCAN HISTORY -->
-      <div class="panel" id="view-history">
-        <div class="history-container" id="hist-list">
-          <div class="empty">
-            <div class="empty-ico">🛡️</div>
-            No scanned domains in local database.
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" width="104" height="104" viewBox="0 0 104 104">
+            <circle class="gauge-track" cx="52" cy="52" r="42"/>
+            <circle class="gauge-sweep" id="gaugeSweep" cx="52" cy="52" r="42" style="display:none;"/>
+            <circle class="gauge-arc" id="gaugeArc" cx="52" cy="52" r="42"/>
+            <text x="52" y="49" text-anchor="middle" class="gauge-center-value" id="gaugeValue">4</text>
+            <text x="52" y="65" text-anchor="middle" class="gauge-center-label">RISK</text>
+          </svg>
+          <div class="risk-meta">
+            <span class="verdict-pill safe" id="verdictPill">Safe</span>
+            <div class="meta-row"><span class="k">Confidence</span><span class="v" id="confidenceVal">98.6%</span></div>
+            <div class="meta-row"><span class="k">Scan time</span><span class="v" id="scanTimeVal">3.1 ms</span></div>
+            <div class="meta-row"><span class="k">Engine</span><span class="v">ML 75 / Rule 25</span></div>
           </div>
         </div>
       </div>
 
-      <!-- PANEL: PERFORMANCE -->
-      <div class="panel" id="view-performance">
-        <div class="settings-list">
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">Average Inference Speed</span>
-              <span class="settings-desc">Model execution time on standard CPU wasm runtime</span>
-            </div>
-            <span class="metric-val blue" id="p-avg-inf">0.0 ms</span>
+      <div class="card">
+        <p class="card-title">AI Runtime</p>
+        <div class="status-strip">
+          <div class="status-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="10" y="10" width="4" height="4"/></svg>
+            <span class="label"><strong>ONNX Runtime Web</strong>Random Forest · 1.66 MB</span>
           </div>
-          
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">Model Engine Spec</span>
-              <span class="settings-desc">RandomForest Classifier (100 Trees, 30 Input Parameters)</span>
-            </div>
-            <span class="metric-val">1.66 MB</span>
+          <div class="status-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>
+            <span class="label"><strong>100% On-Device</strong>No cloud inference</span>
           </div>
-
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">Runtime Engine</span>
-              <span class="settings-desc">ONNX Runtime Web (WASM execution context)</span>
-            </div>
-            <span class="metric-val" style="font-size:12px;color:var(--color-primary)">v1.17.3</span>
+          <div class="status-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a15 15 0 0 1 4.5-2.8M20.9 9A15 15 0 0 0 16 6.2M8.5 12.5a8 8 0 0 1 7 0M11 16a3.5 3.5 0 0 1 2 0"/></svg>
+            <span class="label"><strong>Offline Ready</strong>Works without a network</span>
           </div>
-
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">Active Memory Overhead</span>
-              <span class="settings-desc">Estimated allocated WASM heap overhead</span>
-            </div>
-            <span class="metric-val" id="p-mem">~11.0 MB</span>
+          <div class="status-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M8 12l-2.5 2.5a3.5 3.5 0 0 0 5 5L13 17"/><path d="M16 12l2.5-2.5a3.5 3.5 0 0 0-5-5L11 7"/></svg>
+            <span class="label"><strong>No URL Upload</strong>Nothing leaves this device</span>
           </div>
         </div>
       </div>
 
-      <!-- PANEL: ARCHITECTURE -->
-      <div class="panel" id="view-architecture">
-        <div class="arch-flow">
-          <div class="arch-node active" id="node-1">
-            <div class="arch-node-num">1</div>
-            <div class="arch-node-txt">URL / DOM Input Stream</div>
-          </div>
-          <div class="arch-arrow active" id="arrow-1"></div>
-          
-          <div class="arch-node" id="node-2">
-            <div class="arch-node-num">2</div>
-            <div class="arch-node-txt">30-Feature Extractor (Preprocessors)</div>
-          </div>
-          <div class="arch-arrow" id="arrow-2"></div>
+      <div class="card">
+        <p class="card-title">Why this score</p>
+        <div class="reason-list" id="reasonList"></div>
+      </div>
 
-          <div class="arch-node" id="node-3">
-            <div class="arch-node-num">3</div>
-            <div class="arch-node-txt">ONNX WebAssembly Inference Engine</div>
-          </div>
-          <div class="arch-arrow" id="arrow-3"></div>
+      <div class="card">
+        <p class="card-title">Recent scans</p>
+        <div id="historyList"></div>
+      </div>
 
-          <div class="arch-node" id="node-4">
-            <div class="arch-node-num">4</div>
-            <div class="arch-node-txt">Risk Fusion (ML 75% + Heuristics 25%)</div>
-          </div>
-          <div class="arch-arrow" id="arrow-4"></div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="rescanBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.1 13a9 9 0 1 0 2.6-6.4L3 8.9"/><path d="M3 3v5h5"/></svg>
+          Re-scan
+        </button>
+        <button class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          Full report
+        </button>
+      </div>
+    </section>
 
-          <div class="arch-node" id="node-5">
-            <div class="arch-node-num">5</div>
-            <div class="arch-node-txt">Decisive Verdict & Warning Action</div>
+    <!-- ===================== HISTORY ===================== -->
+    <section class="view" id="view-history">
+      <div class="card">
+        <p class="card-title">All scans this session</p>
+        <div id="historyListFull"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="btn-export">Export history</button>
+        <button class="btn btn-ghost" id="btn-clear">Clear history</button>
+      </div>
+    </section>
+
+    <!-- ===================== SETTINGS ===================== -->
+    <section class="view" id="view-settings">
+      <div class="card">
+        <p class="card-title">Protection</p>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Offline lock</div>
+            <div class="setting-desc">Never send data over the network</div>
           </div>
+          <label class="switch"><input type="checkbox" id="set-offline" checked disabled><span class="track"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Email scanner</div>
+            <div class="setting-desc">Scan Gmail messages locally</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="set-email" checked><span class="track"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Notifications</div>
+            <div class="setting-desc">Alert on high-risk pages</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="set-notif" checked><span class="track"></span></label>
         </div>
       </div>
 
-      <!-- PANEL: SETTINGS -->
-      <div class="panel" id="view-settings">
-        <div class="settings-list">
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">Offline Lock Mode</span>
-              <span class="settings-desc">Enforces strictly local behavior. Disables all optional API enrichments.</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="set-offline" checked disabled>
-              <span class="slider"></span>
-            </label>
+      <div class="card">
+        <p class="card-title">Optional enrichment</p>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">VirusTotal lookup</div>
+            <div class="setting-desc">Cloud check, off by default</div>
           </div>
-
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">Email Threat Scanner</span>
-              <span class="settings-desc">Injects scanners into Gmail and Outlook client interfaces.</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="set-email" checked>
-              <span class="slider"></span>
-            </label>
+          <label class="switch"><input type="checkbox" id="set-vt"><span class="track"></span></label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Google Safe Browsing</div>
+            <div class="setting-desc">Cross-check against known lists</div>
           </div>
-
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">Heuristic Fallback Engine</span>
-              <span class="settings-desc">Allows backup validation if WASM engine experiences a heap failure.</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="set-heuristics" checked>
-              <span class="slider"></span>
-            </label>
+          <label class="switch"><input type="checkbox" id="set-gsb"><span class="track"></span></label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Anonymous telemetry</div>
+            <div class="setting-desc">Off by default, never includes URLs</div>
           </div>
-
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">VirusTotal Enrichment</span>
-              <span class="settings-desc">Provides non-blocking background domain checks (online only).</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="set-vt">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="settings-row">
-            <div class="settings-info">
-              <span class="settings-label">Real-time Warnings</span>
-              <span class="settings-desc">Show OS notification when high risk threat is detected.</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="set-notif" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="settings-row" style="margin-top: 6px;">
-            <div class="settings-info">
-              <span class="settings-label">Email Threat Scanner Dashboard</span>
-              <span class="settings-desc">Launch the standalone email threat analyzer page.</span>
-            </div>
-            <button class="btn-action btn-email" id="btn-email-scanner" style="width: auto; padding: 6px 14px; background: rgba(168, 85, 247, 0.08); color: var(--color-purple); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
-              Open Dashboard
-            </button>
-          </div>
-
-          <div class="settings-row" style="margin-top: 6px;">
-            <button class="btn-danger-outline" id="btn-clear-settings">Reset Cache & Data</button>
-          </div>
+          <label class="switch"><input type="checkbox" id="set-telemetry"><span class="track"></span></label>
         </div>
       </div>
 
-      <!-- PANEL: ABOUT -->
-      <div class="panel" id="view-about">
-        <div class="about-card">
-          <div class="about-row">
-            <span class="about-lbl">Product Version</span>
-            <span class="about-val">v4.0.0 (Stable release)</span>
-          </div>
-          <div class="about-row">
-            <span class="about-lbl">AI Runtime Environment</span>
-            <span class="about-val">ONNX Runtime Web (WASM context)</span>
-          </div>
-          <div class="about-row">
-            <span class="about-lbl">Model Architecture</span>
-            <span class="about-val">RandomForest Classifier (100 Trees)</span>
-          </div>
-          <div class="about-row">
-            <span class="about-lbl">Active Feature Map</span>
-            <span class="about-val">30-feature vector extraction</span>
-          </div>
-          <div class="about-row">
-            <span class="about-lbl">Licensing</span>
-            <span class="about-val">MIT Open Source</span>
-          </div>
-          <div class="about-row">
-            <span class="about-lbl">Bundle footprint</span>
-            <span class="about-val">3.49 MB (Zero remote footprint)</span>
-          </div>
-        </div>
+      <div class="card">
+        <p class="card-title">Performance</p>
+        <div class="meta-row"><span class="k">Model size</span><span class="v">1.66 MB</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Avg. inference</span><span class="v">3.4 ms</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Memory footprint</span><span class="v">~18 MB</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Runtime</span><span class="v">ONNX Runtime Web</span></div>
       </div>
+    </section>
 
-      <!-- PANEL: DEMO SANDBOX -->
-      <div class="panel" id="view-sandbox">
-        <p class="sandbox-intro">
-          <strong>Hackathon Sandbox Mode</strong>: Click any item below to simulate real-time URL classification. 
-          This performs feature extraction and runs local WASM inference instantly.
-        </p>
-        <div class="sandbox-grid">
-          <div class="sandbox-card" data-url="https://google.com" data-risk="0.02" data-verdict="safe" data-reasons="">
-            <span class="sandbox-title">Google Inc.</span>
-            <span class="sandbox-url">https://google.com</span>
-            <span class="sandbox-status safe">✓ SAFE (0.02)</span>
-          </div>
-          <div class="sandbox-card" data-url="https://microsoft.com" data-risk="0.05" data-verdict="safe" data-reasons="">
-            <span class="sandbox-title">Microsoft Corp.</span>
-            <span class="sandbox-url">https://microsoft.com</span>
-            <span class="sandbox-status safe">✓ SAFE (0.05)</span>
-          </div>
-          <div class="sandbox-card" data-url="http://chase-security-alerts.xyz/login" data-risk="0.88" data-verdict="phishing" data-reasons="Suspicious TLD|Suspicious Keyword|Uses HTTP">
-            <span class="sandbox-title">Chase Impersonation (High)</span>
-            <span class="sandbox-url">chase-security-alerts.xyz</span>
-            <span class="sandbox-status phishing">⚠ CRITICAL (0.88)</span>
-          </div>
-          <div class="sandbox-card" data-url="https://paypal-update-account.tk/signin" data-risk="0.94" data-verdict="phishing" data-reasons="Brand Impersonation|Suspicious TLD|Sensitive Path">
-            <span class="sandbox-title">PayPal Update Alert (High)</span>
-            <span class="sandbox-url">paypal-update-account.tk</span>
-            <span class="sandbox-status phishing">⚠ CRITICAL (0.94)</span>
-          </div>
-          <div class="sandbox-card" data-url="http://192.168.1.1/admin-verification" data-risk="0.62" data-verdict="phishing" data-reasons="IP Address Used|Sensitive Path|Uses HTTP">
-            <span class="sandbox-title">IP Address Gateway (Medium)</span>
-            <span class="sandbox-url">192.168.1.1/admin-verify</span>
-            <span class="sandbox-status warning">⚡ MEDIUM (0.62)</span>
-          </div>
-          <div class="sandbox-card" data-url="https://secure-login-paypa1.com" data-risk="0.85" data-verdict="phishing" data-reasons="Lookalike homograph|Suspicious Keyword">
-            <span class="sandbox-title">Paypa1 Homograph (High)</span>
-            <span class="sandbox-url">secure-login-paypa1.com</span>
-            <span class="sandbox-status phishing">⚠ CRITICAL (0.85)</span>
-          </div>
-        </div>
-      </div>
+  </main>
 
-    </div>
-  </div>
+  <footer class="footer">
+    <span class="footer-brand">v1.0.0 · MIT License</span>
+    <a class="footer-link" href="#">View on GitHub →</a>
+  </footer>
 
-  <!-- Real-time Scan Overlay -->
-  <div class="scan-overlay" id="scan-overlay">
-    <div class="scan-spinner">
-      <svg width="72" height="72" viewBox="0 0 72 72">
-        <circle class="scan-spinner-bg" cx="36" cy="36" r="32"/>
-        <circle class="scan-spinner-fill" cx="36" cy="36" r="32"/>
-      </svg>
-    </div>
-    <div class="scan-title">Analyzing Sandbox Stream</div>
-    <div class="scan-subtitle" id="scan-overlay-url">Target: Unknown</div>
-    <div class="scan-steps">
-      <div class="scan-step" id="step-1">
-        <span>1. Extracting URL Features</span>
-        <div class="scan-step-dot"></div>
-      </div>
-      <div class="scan-step" id="step-2">
-        <span>2. Running WebAssembly Model</span>
-        <div class="scan-step-dot"></div>
-      </div>
-      <div class="scan-step" id="step-3">
-        <span>3. Running Combo Heuristics</span>
-        <div class="scan-step-dot"></div>
-      </div>
-      <div class="scan-step" id="step-4">
-        <span>4. Fusing Verdict Decisions</span>
-        <div class="scan-step-dot"></div>
-      </div>
-    </div>
-  </div>
-
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>
