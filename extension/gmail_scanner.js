@@ -215,7 +215,11 @@ async function scanEmail(bodyText, bodyHtml, sender, subject, containerEl) {
 
   } catch (err) {
     console.warn(`[PhishGuard Email] Scan failed: ${err.message}`);
-    showEmailBanner(containerEl, "error", { error: err.message });
+    if (err.message.includes("Extension context invalidated")) {
+      showEmailBanner(containerEl, "context_invalidated", {});
+    } else {
+      showEmailBanner(containerEl, "error", { error: err.message });
+    }
   } finally {
     isScanning = false;
   }
@@ -275,6 +279,12 @@ function showEmailBanner(containerEl, status, result) {
       banner.style.maxHeight = "0";
       setTimeout(() => banner.remove(), 600);
     }, 6000);
+  } else if (status === "context_invalidated") {
+    banner.innerHTML = `
+      <div class="pg-email-banner-inner pg-error">
+        <span>⚡ PhishGuard: Extension updated. Please reload the page to scan this email.</span>
+      </div>
+    `;
   } else if (status === "error") {
     banner.innerHTML = `
       <div class="pg-email-banner-inner pg-error">
