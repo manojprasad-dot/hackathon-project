@@ -169,22 +169,20 @@ function renderHistory() {
     return;
   }
 
-  const rows = history
-    .map((h) => {
-      const v = verdictForScore(h.score);
-      const timeVal = h.time || ago(h.timestamp);
-      return `
-      <div class="scan-row">
-        <div class="favicon">${h.domain[0].toUpperCase()}</div>
-        <div class="scan-domain" title="${escHtml(h.domain)}">${escHtml(h.domain)}</div>
-        <div class="scan-score ${v} mono">${Math.round(h.score)}%</div>
-        <div class="scan-time">${timeVal}</div>
-      </div>`;
-    })
-    .join("");
-  
-  list.innerHTML = rows;
-  listFull.innerHTML = rows;
+  const makeRow = (h) => {
+    const v = verdictForScore(h.score);
+    const timeVal = h.time || ago(h.timestamp);
+    return `
+    <div class="scan-row">
+      <div class="favicon">${h.domain[0].toUpperCase()}</div>
+      <div class="scan-domain" title="${escHtml(h.domain)}">${escHtml(h.domain)}</div>
+      <div class="scan-score ${v} mono">${Math.round(h.score)}%</div>
+      <div class="scan-time">${timeVal}</div>
+    </div>`;
+  };
+
+  list.innerHTML = history.slice(0, 3).map(makeRow).join("");
+  listFull.innerHTML = history.map(makeRow).join("");
 }
 
 
