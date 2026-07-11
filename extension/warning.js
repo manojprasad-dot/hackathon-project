@@ -19,9 +19,12 @@ if (riskEl) riskEl.textContent = RISK_LABELS[risk] || "HIGH RISK";
 // -- Confidence value + animated bar (delay so CSS transition fires)
 const pct = Math.round(confidence * 100);
 document.getElementById("confidence").textContent = pct + "%";
-setTimeout(() => {
-  document.getElementById("conf-bar").style.width = pct + "%";
-}, 80);
+const confBar = document.getElementById("conf-bar");
+if (confBar) {
+  setTimeout(() => {
+    confBar.style.width = pct + "%";
+  }, 80);
+}
 
 // -- Reasons list (animated stagger)
 if (reasons) {
