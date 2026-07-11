@@ -133,7 +133,7 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
     print("\n[3/5] Training 100-Tree RandomForest Classifier...")
-    model = RandomForestClassifier(n_estimators=100, max_depth=15, random_state=42, n_jobs=-1)
+    model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
     model.fit(X_train, y_train)
 
     # Evaluate
