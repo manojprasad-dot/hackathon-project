@@ -41,7 +41,8 @@ const FEATURE_WEIGHTS = {
   has_lookalike_chars:     0.35,
   has_sensitive_path:      0.20,
   is_shortened_url:        0.35,
-  num_subdomains:          0.10,   // per subdomain above 2
+  num_subdomains:          0.15,   // per subdomain above 2 (Aligned with local model importances)
+  num_dots_penalty:        0.08,   // per dot above 3
   has_encoded_chars:       0.22,
   has_redirect_param:      0.20,
   has_double_slash:        0.20,
@@ -298,6 +299,13 @@ class PhishGuardPredictor {
     if (extraSubdomains > 0) {
       score += FEATURE_WEIGHTS.num_subdomains * extraSubdomains;
       reasons.push(`Excessive subdomain depth (${f.num_subdomains} levels)`);
+      flags++;
+    }
+
+    const extraDots = Math.max(0, (f.num_dots || 0) - 3);
+    if (extraDots > 0) {
+      score += FEATURE_WEIGHTS.num_dots_penalty * extraDots;
+      reasons.push(`Excessive dot segments count (${f.num_dots} dots) indicating deep obfuscation`);
       flags++;
     }
 
