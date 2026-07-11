@@ -1,4 +1,4 @@
-# 🛡️ PhishGuard Edge AI — 100% On-Device Phishing Detector
+# 🛡️ PhishGuard Edge AI — 100% On-Device Browser Phishing Detector
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![ONNX Runtime](https://img.shields.io/badge/ONNX--Runtime-WebAssembly-purple.svg)](https://onnxruntime.ai/)
@@ -7,6 +7,8 @@
 [![Privacy Compliance](https://img.shields.io/badge/Privacy-100%25%20On--Device-brightgreen.svg)](#)
 
 PhishGuard Edge AI is a next-generation browser security extension that runs machine learning inference **100% locally in the user's browser**. By integrating **ONNX Runtime Web** into a classic Manifest V3 Service Worker, it evaluates incoming URLs and emails for phishing indicators with **zero cloud dependencies**, **zero latency**, and **zero data leakage**.
+
+🌐 **Live Website & Download:** [https://phishguard26.netlify.app/](https://phishguard26.netlify.app/)
 
 ---
 
@@ -51,6 +53,43 @@ PhishGuard Edge AI is a next-generation browser security extension that runs mac
 
 ---
 
+## 📁 Project Structure
+
+```
+phishguard/
+│
+├── extension/                        ← Chrome MV3 Extension Root (On-Device Inference)
+│   ├── manifest.json                 ← Manifest configuration (WASM CSP, permissions)
+│   ├── background.js                 ← SW controller (URL monitor, IPC interface)
+│   ├── content.js                    ← Content script (warning redirects, overlay injectors)
+│   ├── warning.html / warning.css    ← Redesigned Warning Landing Page
+│   ├── warning.js                    ← Warning page query parameter parser
+│   ├── email_scanner.html / .js      ← Standalone Email Scanner View
+│   ├── gmail_scanner.js              ← Gmail/Outlook DOM Observer Injection
+│   │
+│   └── ai/                           ← On-Device AI Bundle
+│       ├── model.onnx                ← 1.66MB Compiled URL Model (100 Trees)
+│       ├── email_model.onnx          ← 138KB Compiled Email Model
+│       ├── ort.min.js                ← ONNX Runtime Web JS engine (v1.17.3)
+│       ├── ort-wasm.wasm             • Classic single-threaded WASM binary
+│       ├── ort-wasm-simd.wasm        • High-performance SIMD WASM binary
+│       ├── preprocessing.js          ← 30-Feature URL preprocessor
+│       ├── email_preprocessor.js     ← 28-Feature Email preprocessor
+│       └── predictor.js              ← ONNX Inference & Heuristics fusion
+│
+└── backend/                          ← Offline Python training pipeline
+    ├── app.py                        ← Legacy prediction endpoint & local verification server
+    ├── requirements_train.txt        ← ML/ONNX export dependencies
+    ├── features/
+    │   └── extractor.py              ← Reference Feature extraction (38 URL features)
+    └── ml/
+        ├── train_model.py            ← Balanced 50K URL training script
+        ├── detector.py               ← Reference heuristic rules
+        └── model.pkl                 ← legacy scikit-learn format
+```
+
+---
+
 ## ⚡ Performance Benchmarks
 
 | Metric | Google Safe Browsing | Legacy Cloud API | PhishGuard Edge AI |
@@ -62,19 +101,6 @@ PhishGuard Edge AI is a next-generation browser security extension that runs mac
 
 ---
 
-## 🗺️ Tech Stack Under the Hood
-
-### Frontend (Browser Extension)
-*   **Runtime Core**: ONNX Runtime Web v1.17.3 loaded via single-threaded WebAssembly (`ort-wasm.wasm` and `ort-wasm-simd.wasm`) to comply with Manifest V3 restrictions.
-*   **UI/UX**: Custom dark cyber-security theme built with responsive tabs, SVG circular gauge transitions, and modular layouts.
-*   **Local State**: Synced with Chrome's `storage.local` cache database.
-
-### Backend (Model Training & Compiler Pipeline)
-*   **Model**: RandomForest Classifier (100 Trees) optimized for binary size (`1.66 MB` URL model, `138 KB` Email model) trained on balanced datasets.
-*   **Verification**: Custom conversion validation scripts checking floating-point prediction parity between python scikit-learn and JS ONNX models up to `1e-7` precision.
-
----
-
 ## 📂 Hackathon Judge's Code Checklist
 
 Technical judges can verify the authenticity of the local AI architecture here:
@@ -83,6 +109,55 @@ Technical judges can verify the authenticity of the local AI architecture here:
 *   [Email Feature Extraction](file:///d:/hackathon-project/extension/ai/email_preprocessor.js) — Local extractor mapping email bodies to 28 input variables.
 *   [Offline Model Trainer](file:///d:/hackathon-project/backend/ml/train_model.py) — Python script pulling UCI datasets and compiling Random Forests.
 *   [ONNX Exporter & Parity Tester](file:///d:/hackathon-project/backend/convert_to_onnx.py) — Python tool checking correctness metrics and copying `.onnx` binaries to the client.
+
+---
+
+## 🔍 Feature Extraction Specifications
+
+### URL Features (38 Parameters)
+| Category | Features |
+| :--- | :--- |
+| **Length (5)** | `url_length`, `hostname_length`, `path_length`, `query_length`, `path_depth` |
+| **Count (7)** | `num_dots`, `num_hyphens`, `num_underscores`, `num_digits`, `num_subdomains`, `num_query_params`, `num_special_chars` |
+| **Ratio (4)** | `digit_ratio`, `letter_ratio`, `special_char_ratio`, `hostname_entropy` |
+| **Boolean (11)** | `uses_https`, `is_ip_address`, `is_known_tld_suspicious`, `has_suspicious_keyword`, `has_at_symbol`, `has_double_slash`, `has_redirect_param`, `has_encoded_chars`, `is_known_legitimate`, `brand_in_hostname`, `brand_hyphenated` |
+| **Advanced (3)** | `has_lookalike_chars`, `has_sensitive_path`, `is_shortened_url` |
+| **Advanced v3 (8)** | `has_punycode`, `tld_length`, `subdomain_length`, `has_port_number`, `path_has_double_extension`, `digit_ratio_in_subdomain`, `vowel_consonant_ratio`, `domain_token_count` |
+
+### Email Features (28 Parameters)
+| Category | Features |
+| :--- | :--- |
+| **Urgency (4)** | `has_urgent_language`, `urgent_keyword_count`, `has_threat_language`, `has_reward_language` |
+| **Links (5)** | `link_count`, `has_suspicious_links`, `suspicious_link_ratio`, `has_html_form`, `has_mismatched_url` |
+| **Sender (4)** | `sender_domain_mismatch`, `sender_is_freemail`, `has_spoofed_sender`, `sender_suspicious_tld` |
+| **Content (4)** | `has_generic_greeting`, `body_length`, `capitalization_ratio`, `special_char_ratio` |
+| **Structure (3)** | `has_dangerous_attachment`, `spelling_error_score`, `url_phishing_score` |
+| **Advanced v3 (8)** | `has_base64_content`, `has_javascript`, `link_to_text_ratio`, `has_hidden_text`, `reply_to_mismatch`, `has_tracking_pixel`, `urgency_in_subject`, `body_entropy` |
+
+---
+
+## 🔄 Module Process Flows
+
+### Module 1 — Browser Extension Monitoring
+1. Browser extension installed and activated in Google Chrome.
+2. Extension runs local background monitoring service in `background.js`.
+3. User navigates to a website or clicks a link.
+4. Extension intercepts the navigation event and captures the URL.
+5. Injects URL into local feature preprocessor (`preprocessing.js`).
+6. Passes the 30-feature vector directly to the local ONNX predictor session.
+7. Evaluates ML classifications and heuristical rules synchronously.
+8. If marked high risk, blocks navigation and redirects to `warning.html`.
+9. Logs results into secure storage.local cache database.
+10. Renders green safe metrics overlay inside the popup if clean.
+
+### Module 2 — Offline Pipeline (Model Training & Conversion)
+1. Python environment activated and requirements installed (`requirements_train.txt`).
+2. Run training script `python backend/ml/train_model.py`.
+3. UCI dataset downloaded and balanced (50K URL records).
+4. Trains a 100-tree RandomForest Classifier.
+5. Exports scikit-learn tree maps directly to ONNX format.
+6. Runs parity checks between python outputs and exported WASM outputs.
+7. Auto-copies the compiled `.onnx` files directly to the extension assets.
 
 ---
 
