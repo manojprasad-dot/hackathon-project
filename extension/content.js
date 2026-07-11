@@ -13,6 +13,28 @@ let statusBadge = null;
 // Show "Scanning..." immediately when page loads
 showScanningBadge();
 
+// Query background script for scan result to resolve race conditions
+try {
+  chrome.runtime.sendMessage({ type: "PAGE_READY", url: window.location.href }, (response) => {
+    if (chrome.runtime.lastError) {
+      // Suppress connection errors if background is offline
+      removeBadge();
+      return;
+    }
+    if (response) {
+      if (response.result === "phishing") {
+        showPhishingBadge(response);
+      } else {
+        showSafeBadge(response);
+      }
+    } else {
+      removeBadge();
+    }
+  });
+} catch (e) {
+  removeBadge();
+}
+
 // Listen for messages from background service worker
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
