@@ -57,16 +57,23 @@ Traditional browser security tools rely on cloud lookups. This architecture intr
 
 ---
 
-## 📸 Screenshots
+### 📊 Overview Dashboard
+![Overview Dashboard](docs/images/dashboard.png)
 
-| View | Asset Placement | Description |
-| :--- | :--- | :--- |
-| **Overview Dashboard** | `docs/images/dashboard.png` | Main interface featuring the circular risk meter and Local AI engine statuses. |
-| **Interception Page** | `docs/images/warning_page.png` | Warning landing page shown when navigating to a flagged URL. |
-| **Explainable AI** | `docs/images/explainable_ai.png` | Feature weight lists displaying safety and risk indicators. |
-| **System Settings** | `docs/images/settings.png` | Control panel sections for Privacy, Protection, and Performance. |
-| **Evaluation History** | `docs/images/history.png` | History list of processed scans and prediction engines. |
-| **Offline Execution** | `docs/images/offline_mode.png` | Visual indicator confirming offline evaluation metrics. |
+### 📧 Email Threat Scanner
+![Email Threat Scanner](docs/images/email_scanner.png)
+
+### 🚨 Blocked Interception Warning Page
+![Interception Page](docs/images/warning_page.png)
+
+### ⚙️ Protection & Privacy Settings
+![System Settings](docs/images/settings.png)
+
+### 📜 Session Evaluation Logs
+![Evaluation History](docs/images/history.png)
+
+### ⚡ Hardware Performance Specs
+![Hardware Performance](docs/images/performance.png)
 
 ---
 
