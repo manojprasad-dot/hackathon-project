@@ -179,6 +179,10 @@ function pollOutlook() {
 // ── Run local ONNX email analysis ────────────────────────────
 
 async function scanEmail(bodyText, bodyHtml, sender, subject, containerEl) {
+  if (!chrome.runtime || !chrome.runtime.id) {
+    console.log("[PhishGuard Email] Context is not active (Extension updated or reloaded).");
+    return;
+  }
   isScanning = true;
 
   // Remove any existing PhishGuard banners on the page
