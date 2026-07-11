@@ -63,8 +63,6 @@ Traditional browser security tools rely on cloud lookups. This architecture intr
 ### 📧 Email Threat Scanner
 ![Email Threat Scanner](docs/images/email_scanner.png)
 
-### 🚨 Blocked Interception Warning Page
-![Interception Page](docs/images/warning_page.png)
 
 ### ⚙️ Protection & Privacy Settings
 ![System Settings](docs/images/settings.png)
