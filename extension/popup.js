@@ -193,7 +193,49 @@ function renderHistory() {
 
 async function loadActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab || !tab.url || !tab.url.startsWith("http")) {
+  if (!tab || !tab.url) return;
+
+  if (tab.url.startsWith("chrome-extension://") && tab.url.includes("warning.html")) {
+    try {
+      const urlObj = new URL(tab.url);
+      const blockedUrl = urlObj.searchParams.get("url") || "";
+      const blockedConfidence = parseFloat(urlObj.searchParams.get("confidence") || "0.9");
+      const blockedReasonsStr = urlObj.searchParams.get("reasons") || "";
+      
+      const hostname = blockedUrl ? new URL(blockedUrl).hostname : "blocked-site";
+      const score = blockedConfidence * 100;
+      
+      const parsedReasons = blockedReasonsStr.split("|").filter(r => r.trim()).map(r => {
+        const spec = ALL_THREAT_EXPLANATIONS[r] || {
+          weight: 0.15,
+          severity: "warning",
+          icon: "type",
+          desc: `Heuristic pattern matched: "${r}"`
+        };
+        return {
+          icon: spec.icon,
+          severity: spec.severity,
+          weight: spec.weight,
+          title: r,
+          detail: spec.desc
+        };
+      });
+
+      activeTabInfo = {
+        domain: hostname,
+        score: score,
+        confidence: score,
+        scanMs: 3.8,
+        reasons: parsedReasons
+      };
+      renderActiveTabVerdict();
+      return;
+    } catch (e) {
+      console.error("Error parsing warning page parameters:", e);
+    }
+  }
+
+  if (!tab.url.startsWith("http")) {
     activeTabInfo = {
       domain: "internal-page",
       score: 0,
