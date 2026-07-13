@@ -31,6 +31,22 @@ Every day, **3.4 billion phishing emails** are sent worldwide. Traditional brows
 
 ---
 
+## 🆚 Why On-Device AI?
+
+Traditional security models compromise user privacy by sending private browsing histories to remote databases. PhishGuard brings the AI runtime directly to the source.
+
+```
+[Traditional Browser Protection]
+   Browser  ──>  Cloud API (onrender.com, vt.com)  ──>  Inference  ──>  Result
+   (Uploads all your visited URLs, search queries, and credentials context)
+
+[PhishGuard Edge AI]
+   Browser  ──>  ONNX Runtime Web (WASM + SIMD)    ──>  Local AI   ──>  Result
+   (100% on-device containment. Zero data leaves your computer. Works offline)
+```
+
+---
+
 ## 🧠 How It Works
 
 PhishGuard compiles a trained Random Forest classifier into an **ONNX model** that runs via **WebAssembly** directly in Chrome's service worker. When you navigate to any webpage:
