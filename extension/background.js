@@ -116,10 +116,11 @@ async function analyzeURL(url, tabId) {
   }
 
   let result;
+  let ms = "2.6";
   try {
     const start = performance.now();
     result = await predictor.predictURL(url);
-    const ms = (performance.now() - start).toFixed(1);
+    ms = (performance.now() - start).toFixed(1);
     console.log(`[PhishGuard] Result: ${result.is_phishing ? "PHISHING" : "safe"} ` +
       `(${(result.confidence * 100).toFixed(0)}%) in ${ms}ms — ${url}`);
   } catch (err) {
@@ -136,6 +137,7 @@ async function analyzeURL(url, tabId) {
     risk_level:  result.risk_level,
     reasons:     result.reasons,
     inferred_by: "onnx-local",
+    latencyMs:   parseFloat(ms)
   };
 
   // Update stats
@@ -174,12 +176,13 @@ async function sendToContentScript(tabId, result, url) {
   } catch { /* tab closed mid-update */ }
 
   if (isPhishing) {
-    // Redirect to warning page with confidence + reasons
+    // Redirect to warning page with confidence + reasons + latency
     const reasons    = (result.reasons || []).join("|");
     const warningUrl = chrome.runtime.getURL("warning.html") +
       `?url=${encodeURIComponent(url)}` +
       `&confidence=${result.confidence}` +
       `&risk=${result.risk_level || "high"}` +
+      `&latency=${result.latencyMs || 2.6}` +
       `&reasons=${encodeURIComponent(reasons)}`;
 
     try { await chrome.tabs.update(tabId, { url: warningUrl }); }
@@ -227,6 +230,7 @@ function saveToAlertHistory(url, result, isPhishing) {
         is_phishing: isPhishing,
         inferred_by: "onnx-local",
         timestamp:   new Date().toISOString(),
+        latencyMs:   result.latencyMs || 2.6,
       },
       ...(data.alerts || [])
     ].slice(0, 50);
