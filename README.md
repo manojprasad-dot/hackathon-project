@@ -104,11 +104,15 @@ graph TD
 
 | Overview Dashboard | Warning Page | Email Scanner |
 |---|---|---|
-| ![Dashboard](docs/images/dashboard.png) | ![Settings](docs/images/settings.png) | ![Email Scanner](docs/images/email_scanner.png) |
+| ![Dashboard](docs/images/dashboard.png) | ![Warning Page](docs/images/warning_page.png) | ![Email Scanner](docs/images/email_scanner.png) |
 
-| Scan History | Performance |
+| Scan History | Explainable AI (XAI) | Protection Settings |
+|---|---|---|
+| ![History](docs/images/history.png) | ![XAI](docs/images/xai.png) | ![Settings](docs/images/settings.png) |
+
+| Recent Scans | Performance Metrics |
 |---|---|
-| ![History](docs/images/history.png) | ![Performance](docs/images/performance.png) |
+| ![Recent Scans](docs/images/recent_scans.png) | ![Performance](docs/images/performance.png) |
 
 ---
 
