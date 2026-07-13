@@ -310,9 +310,7 @@
   </div>
 
   <script>
-    const API_BASE = "https://phishguard-api-6dmc.onrender.com";
-
-    // Read URL from query params
+    // No cloud API — reports are stored locally in chrome.storage
     const params = new URLSearchParams(window.location.search);
     const reportUrl = params.get('url') || '';
     document.getElementById('report-url').value = reportUrl || 'No URL provided';
@@ -327,7 +325,7 @@
       }
     });
 
-    // Form submit
+    // Form submit — stores report locally via background.js
     document.getElementById('report-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -338,43 +336,33 @@
       const description = document.getElementById('report-description').value;
       const email = document.getElementById('report-email').value;
 
-      // Validate
       if (!reportUrl) {
         showFeedback('error', '⚠️', 'No URL to report.');
         return;
       }
 
-      // Loading state
       btn.classList.add('loading');
       btn.textContent = '⏳ Submitting...';
       feedback.className = 'feedback';
       feedback.style.display = 'none';
 
       try {
-        const res = await fetch(`${API_BASE}/report`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: reportUrl,
-            report_type: reportType,
-            description: description,
-            email: email || undefined,
-            timestamp: new Date().toISOString()
-          })
+        // Store report locally via chrome.runtime message
+        await chrome.runtime.sendMessage({
+          type: 'REPORT_WEBSITE',
+          url: reportUrl,
+          reason: `[${reportType}] ${description}`,
         });
 
-        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        showFeedback('success', '✅', 'Report saved locally. Thank you for helping keep the web safe.');
 
-        showFeedback('success', '✅', 'Report submitted successfully! Thank you for helping keep the web safe.');
-
-        // Disable form after success
         document.getElementById('report-type').disabled = true;
         document.getElementById('report-description').disabled = true;
         document.getElementById('report-email').disabled = true;
         btn.style.display = 'none';
 
       } catch (err) {
-        showFeedback('error', '❌', `Failed to submit report: ${err.message}. Please try again.`);
+        showFeedback('error', '❌', `Failed to save report: ${err.message}. Please try again.`);
         btn.classList.remove('loading');
         btn.textContent = '🚩 Submit Report';
       }

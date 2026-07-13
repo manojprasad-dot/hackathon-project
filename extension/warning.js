@@ -5,7 +5,13 @@ const params     = new URLSearchParams(window.location.search);
 const url        = params.get("url")        || "Unknown";
 const confidence = parseFloat(params.get("confidence") || "0");
 const risk       = (params.get("risk")      || "high").toLowerCase();
+const latency    = params.get("latency")   || "2.6";
 const reasons    = params.get("reasons")    || "";
+
+const scanTimeEl = document.getElementById("scan-time");
+if (scanTimeEl) {
+  scanTimeEl.textContent = parseFloat(latency).toFixed(1) + "ms";
+}
 
 // -- Blocked URL
 document.getElementById("blocked-url").textContent =

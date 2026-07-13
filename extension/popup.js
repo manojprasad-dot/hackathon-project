@@ -199,6 +199,7 @@ async function loadActiveTab() {
       const blockedUrl = urlObj.searchParams.get("url") || "";
       const blockedConfidence = parseFloat(urlObj.searchParams.get("confidence") || "0.9");
       const blockedReasonsStr = urlObj.searchParams.get("reasons") || "";
+      const blockedLatency = parseFloat(urlObj.searchParams.get("latency") || "3.8");
       
       const hostname = blockedUrl ? new URL(blockedUrl).hostname : "blocked-site";
       const score = blockedConfidence * 100;
@@ -223,7 +224,7 @@ async function loadActiveTab() {
         domain: hostname,
         score: score,
         confidence: score,
-        scanMs: 3.8,
+        scanMs: blockedLatency,
         reasons: parsedReasons
       };
       renderActiveTabVerdict();
@@ -307,6 +308,8 @@ function renderActiveTabVerdict() {
 
   $("#confidenceVal").textContent = `${activeTabInfo.confidence.toFixed(1)}%`;
   $("#scanTimeVal").textContent = `${activeTabInfo.scanMs.toFixed(1)} ms`;
+  const perfInf = $("#perf-inference-time");
+  if (perfInf) perfInf.textContent = `${activeTabInfo.scanMs.toFixed(1)} ms`;
 
   document.body.dataset.verdict = verdict;
   $("#warningBanner").style.display = verdict === "danger" ? "flex" : "none";

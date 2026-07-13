@@ -73,7 +73,7 @@
         <div class="status-strip">
           <div class="status-chip">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            <span class="label"><strong>⚡ ONNX Runtime Web</strong>Random Forest · 1.66 MB</span>
+            <span class="label"><strong>⚡ ONNX Runtime Web</strong>Random Forest · 4.4 MB</span>
           </div>
           <div class="status-chip">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -168,32 +168,23 @@
         </div>
       </div>
 
-      <!-- Group: Advanced Enrichment -->
+      <!-- Group: On-Device AI Architecture -->
       <div class="card">
-        <p class="card-title">Advanced Integrations</p>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">VirusTotal API</div>
-            <div class="setting-desc">Query background threat indicators (online)</div>
-          </div>
-          <label class="switch"><input type="checkbox" id="set-vt"><span class="track"></span></label>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Google Safe Browsing</div>
-            <div class="setting-desc">Cross-reference blacklisted repositories</div>
-          </div>
-          <label class="switch"><input type="checkbox" id="set-gsb"><span class="track"></span></label>
-        </div>
+        <p class="card-title">On-Device AI Architecture</p>
+        <div class="meta-row"><span class="k">AI Engine</span><span class="v" style="color:var(--safe)">ONNX Runtime Web (WASM)</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Cloud API Calls</span><span class="v" style="color:var(--safe)">0 (Zero)</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">URLs Sent to Server</span><span class="v" style="color:var(--safe)">None</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Offline Capable</span><span class="v" style="color:var(--safe)">✓ Fully Operational</span></div>
       </div>
 
       <!-- Group: Core System specs -->
       <div class="card">
-        <p class="card-title">Hardware Performance Specs</p>
-        <div class="meta-row"><span class="k">AI Model Footprint</span><span class="v">1.66 MB</span></div>
-        <div class="meta-row" style="margin-top:6px;"><span class="k">Avg. Inference Speed</span><span class="v">2.6 ms</span></div>
-        <div class="meta-row" style="margin-top:6px;"><span class="k">Heap Footprint</span><span class="v">~11 MB</span></div>
-        <div class="meta-row" style="margin-top:6px;"><span class="k">Engine Architecture</span><span class="v">WASM Single-Thread</span></div>
+        <p class="card-title">Performance Metrics</p>
+        <div class="meta-row"><span class="k">AI Model Size</span><span class="v" id="perf-model-size">4.4 MB</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Last Inference</span><span class="v" id="perf-inference-time">— ms</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">WASM Heap</span><span class="v">~11 MB</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Engine</span><span class="v">WASM + SIMD</span></div>
+        <div class="meta-row" style="margin-top:6px;"><span class="k">Network Requests</span><span class="v" style="color:var(--safe);font-weight:600;">0</span></div>
       </div>
     </section>
 
