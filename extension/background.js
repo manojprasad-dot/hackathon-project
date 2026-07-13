@@ -2,8 +2,8 @@
 // PhishGuard v4.0 -- extension/background.js
 // MODULE: Browser Extension Service Worker
 //
-// On-Device AI Edition -- ALL phishing inference runs locally
-// via ONNX Runtime Web. No network calls required for prediction.
+// 100% On-Device AI — ALL phishing inference runs locally
+// via ONNX Runtime Web (WebAssembly). ZERO network calls.
 //
 // Architecture:
 //   chrome.tabs.onUpdated  ->  analyzeURL(url)
@@ -11,10 +11,8 @@
 //                          ->  sendToContentScript(result)
 //                          ->  badge / warning page / storage
 //
-// Feature: VirusTotal enrichment (optional, non-blocking)
-//   - Fires in background AFTER local prediction is shown
-//   - Never delays or blocks the ONNX result
-//   - Only runs when VT API key is configured AND user is online
+// Privacy: No URLs, domains, or browsing data ever leaves
+// your device. Works fully offline.
 // =============================================================
 
 // -- Load ONNX Runtime Web and the PhishGuard AI modules -----------------
@@ -106,7 +104,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
  * Runs the full on-device phishing detection pipeline for a URL.
  * 1. Runs ONNX inference (+ heuristic ensemble) locally -- <5ms
  * 2. Immediately shows result to the user (badge + content script)
- * 3. Optionally enriches with VirusTotal in background (non-blocking)
+ * 3. Logs scan result to chrome.storage.local
  *
  * @param {string} url
  * @param {number} tabId
@@ -153,9 +151,7 @@ async function analyzeURL(url, tabId) {
   if (activeScans.size > 150) activeScans.clear();
   activeScans.set(url, legacyResult);
 
-  // Optional: VirusTotal enrichment in background (fire-and-forget)
-  // Never blocks the local result. Only runs when online.
-  enrichWithVirusTotal(url).catch(() => {});
+  // All inference is complete. No network calls made.
 }
 
 // -- Send result to content.js / warning page ----------------------------
@@ -238,42 +234,10 @@ function saveToAlertHistory(url, result, isPhishing) {
   });
 }
 
-// -- Optional VirusTotal enrichment (non-blocking) -----------------------
-/**
- * Sends the URL to VirusTotal in the background.
- * Result is stored in chrome.storage for later retrieval by the popup.
- * NEVER delays the local ONNX prediction shown to the user.
- */
-async function enrichWithVirusTotal(url) {
-  // Get VT API key from storage (user-configured)
-  const { vtApiKey } = await chrome.storage.local.get(["vtApiKey"]);
-  if (!vtApiKey) return; // No key configured — skip silently
-
-  try {
-    const encoded = btoa(url).replace(/=/g, "");
-    const res = await fetch(`https://www.virustotal.com/api/v3/urls/${encoded}`, {
-      headers: { "x-apikey": vtApiKey }
-    });
-    if (!res.ok) return;
-    const json = await res.json();
-    const stats = json?.data?.attributes?.last_analysis_stats || {};
-    const vtResult = {
-      url,
-      vt_malicious:   stats.malicious   || 0,
-      vt_suspicious:  stats.suspicious  || 0,
-      vt_harmless:    stats.harmless    || 0,
-      vt_total:       Object.values(stats).reduce((a, b) => a + b, 0),
-      timestamp:      new Date().toISOString(),
-    };
-    // Store VT result; popup can display it as supplemental info
-    chrome.storage.local.get(["vtResults"], (d) => {
-      const vtResults = { ...(d.vtResults || {}), [url]: vtResult };
-      chrome.storage.local.set({ vtResults });
-    });
-  } catch {
-    // Network unavailable or VT rate limit -- silently ignore
-  }
-}
+// -- No cloud API calls ---------------------------------------------------
+// PhishGuard performs ALL inference on-device using ONNX Runtime Web.
+// Zero URLs are transmitted to external servers. This is the core
+// architectural differentiator of this project.
 
 // -- Keyboard shortcut: Ctrl+Shift+P --------------------------------------
 chrome.commands.onCommand.addListener(async (command) => {
